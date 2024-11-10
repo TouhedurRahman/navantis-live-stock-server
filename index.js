@@ -27,6 +27,39 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
+        // Database collections
+        const whpcollections = client.db('navantis_live_stock_db').collection('wh-products');
+        const whsincollections = client.db('navantis_live_stock_db').collection('wh-stock-in');
+
+        // add a new product - warehouse api
+        app.post('/wh-products', async (req, res) => {
+            const newProduct = req.body;
+            const { name } = newProduct;
+
+            try {
+                const existingProduct = await whpcollections.findOne({ name });
+
+                if (existingProduct) {
+                    return res.status(409).send({ message: 'Product already exists' });
+                }
+
+                newProduct.createdAt = new Date();
+                const result = await whpcollections.insertOne(newProduct);
+
+                res.send(result);
+            } catch (error) {
+                res.status(500).send({ message: 'Error adding product', error });
+            }
+        });
+
+        // warehouse stockin api added
+        app.post('/stock-in-wh', async (req, res) => {
+            const newProduct = req.body;
+            newProduct.createdAt = new Date();
+            const result = await whsincollections.insertOne(newProduct);
+            res.send(result);
+        });
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You're successfully connected to MongoDB!");
