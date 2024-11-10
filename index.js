@@ -43,7 +43,7 @@ async function run() {
                     return res.status(409).send({ message: 'Product already exists' });
                 }
 
-                newProduct.createdAt = new Date();
+                // newProduct.createdAt = new Date();
                 const result = await whpcollections.insertOne(newProduct);
 
                 res.send(result);
@@ -52,13 +52,68 @@ async function run() {
             }
         });
 
-        // warehouse stockin api added
+        // warehouse stock-in api
         app.post('/stock-in-wh', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await whsincollections.findOne({
+                    name: newProduct.name,
+                    date: productDate
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await whsincollections.updateOne(
+                        { _id: existingProduct._id },
+                        { $inc: { quantity: newProduct.quantity } }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    newProduct.date = productDate;
+                    const result = await whsincollections.insertOne(newProduct);
+                    res.send({ message: 'New product added', result });
+                }
+            } catch (error) {
+                console.error("Error processing stock-in:", error);
+                res.status(500).send({ message: 'Error processing stock-in', error });
+            }
+        });
+
+        /* app.post('/stock-in-wh', async (req, res) => {
             const newProduct = req.body;
             newProduct.createdAt = new Date();
             const result = await whsincollections.insertOne(newProduct);
             res.send(result);
-        });
+        }); */
+
+        /* app.post('/stock-in-wh', async (req, res) => {
+            const newProduct = req.body;
+            const today = new Date().toISOString().split('T')[0];
+
+            try {
+                const existingProduct = await whsincollections.findOne({
+                    name: newProduct.name,
+                    createdAt: { $gte: new Date(today), $lt: new Date(today + 'T23:59:59.999Z') }
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await whsincollections.updateOne(
+                        { _id: existingProduct._id },
+                        { $inc: { quantity: newProduct.quantity } }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    // newProduct.createdAt = new Date();
+                    const result = await whsincollections.insertOne(newProduct);
+                    res.send({ message: 'New product added', result });
+                }
+            } catch (error) {
+                console.error("Error processing stock-in:", error);
+                res.status(500).send({ message: 'Error processing stock-in', error });
+            }
+        }); */
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
