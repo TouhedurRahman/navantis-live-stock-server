@@ -61,6 +61,7 @@ async function run() {
 
                 const existingProduct = await whsincollections.findOne({
                     name: newProduct.name,
+                    price: newProduct.price,
                     date: productDate
                 });
 
