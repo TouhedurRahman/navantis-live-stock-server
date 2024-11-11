@@ -122,6 +122,12 @@ async function run() {
             }
         }); */
 
+        //get all warehouse stock-in api
+        app.get('/stock-in', async (req, res) => {
+            const result = await whsincollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You're successfully connected to MongoDB!");
