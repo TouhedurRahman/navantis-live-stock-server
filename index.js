@@ -52,6 +52,12 @@ async function run() {
             }
         });
 
+        //get all warehouse products api
+        app.get('/wh-products', async (req, res) => {
+            const result = await whpcollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         // warehouse stock-in api
         app.post('/stock-in-wh', async (req, res) => {
             const newProduct = req.body;
