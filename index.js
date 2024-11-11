@@ -31,21 +31,19 @@ async function run() {
         const whpcollections = client.db('navantis_live_stock_db').collection('wh-products');
         const whsincollections = client.db('navantis_live_stock_db').collection('wh-stock-in');
 
-        // add a new product - warehouse api
+        // Add a new product - warehouse API
         app.post('/wh-products', async (req, res) => {
             const newProduct = req.body;
-            const { name } = newProduct;
+            const { name, price, lot, expire } = newProduct;
 
             try {
-                const existingProduct = await whpcollections.findOne({ name });
+                const existingProduct = await whpcollections.findOne({ name, price, lot, expire });
 
                 if (existingProduct) {
-                    return res.status(409).send({ message: 'Product already exists' });
+                    return res.status(409).send({ message: 'Product already exists with the same details' });
                 }
 
-                // newProduct.createdAt = new Date();
                 const result = await whpcollections.insertOne(newProduct);
-
                 res.send(result);
             } catch (error) {
                 res.status(500).send({ message: 'Error adding product', error });
@@ -68,6 +66,8 @@ async function run() {
                 const existingProduct = await whsincollections.findOne({
                     name: newProduct.name,
                     price: newProduct.price,
+                    lot: newProduct.lot,
+                    expire: newProduct.expire,
                     date: productDate
                 });
 
@@ -123,7 +123,7 @@ async function run() {
         }); */
 
         //get all warehouse stock-in api
-        app.get('/stock-in', async (req, res) => {
+        app.get('/stock-in-wh', async (req, res) => {
             const result = await whsincollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
