@@ -183,9 +183,15 @@ async function run() {
             }
         }); */
 
-        //get all warehouse stock-in api
+        //get all warehouse stock-in API
         app.get('/stock-in-wh', async (req, res) => {
             const result = await whsincollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
+        //get all depot stock-in API
+        app.get('/stock-in-depot', async (req, res) => {
+            const result = await depotincollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
