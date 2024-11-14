@@ -30,6 +30,7 @@ async function run() {
         // Database collections
         const whpcollections = client.db('navantis_live_stock_db').collection('wh-products');
         const whsincollections = client.db('navantis_live_stock_db').collection('wh-stock-in');
+        const depotincollections = client.db('navantis_live_stock_db').collection('depot-stock-in');
 
         // Add a new product - warehouse API
         app.post('/wh-products', async (req, res) => {
@@ -109,6 +110,38 @@ async function run() {
                     newProduct.date = productDate;
                     const result = await whsincollections.insertOne(newProduct);
                     res.send({ message: 'New product added', result });
+                }
+            } catch (error) {
+                console.error("Error processing stock-in:", error);
+                res.status(500).send({ message: 'Error processing stock-in', error });
+            }
+        });
+
+        // Depot stock-in API
+        app.post('/stock-in-depot', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await depotincollections.findOne({
+                    name: newProduct.name,
+                    price: newProduct.price,
+                    lot: newProduct.lot,
+                    expire: newProduct.expire,
+                    date: productDate
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await depotincollections.updateOne(
+                        { _id: existingProduct._id },
+                        { $inc: { quantity: Number(newProduct.quantity) } }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    newProduct.date = productDate;
+                    const result = await depotincollections.insertOne(newProduct);
+                    res.send({ message: 'Depot new product added', result });
                 }
             } catch (error) {
                 console.error("Error processing stock-in:", error);
