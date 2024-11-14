@@ -30,6 +30,7 @@ async function run() {
         // Database collections
         const whpcollections = client.db('navantis_live_stock_db').collection('wh-products');
         const whsincollections = client.db('navantis_live_stock_db').collection('wh-stock-in');
+        const depotpcollections = client.db('navantis_live_stock_db').collection('depot-products');
         const depotincollections = client.db('navantis_live_stock_db').collection('depot-stock-in');
 
         // Add a new product - warehouse API
@@ -114,6 +115,33 @@ async function run() {
             } catch (error) {
                 console.error("Error processing stock-in:", error);
                 res.status(500).send({ message: 'Error processing stock-in', error });
+            }
+        });
+
+        // add depot products API
+        app.post('/depot-products', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const existingProduct = await depotpcollections.findOne({
+                    name: newProduct.name,
+                    lot: newProduct.lot,
+                    expire: newProduct.expire,
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await depotpcollections.updateOne(
+                        { _id: existingProduct._id },
+                        { $inc: { quantity: Number(newProduct.quantity) } }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    const result = await depotpcollections.insertOne(newProduct);
+                    res.send({ message: 'Depot new product added', result });
+                }
+            } catch (error) {
+                console.error("Error add depot:", error);
+                res.status(500).send({ message: 'Error add depot', error });
             }
         });
 
