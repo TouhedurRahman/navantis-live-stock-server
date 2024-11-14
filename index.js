@@ -145,6 +145,12 @@ async function run() {
             }
         });
 
+        //get all depot products API
+        app.get('/depot-products', async (req, res) => {
+            const result = await depotpcollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         // Depot stock-in API
         app.post('/stock-in-depot', async (req, res) => {
             const newProduct = req.body;
