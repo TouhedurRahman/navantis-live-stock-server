@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 require('dotenv').config();
 const cors = require('cors');
@@ -50,13 +50,41 @@ async function run() {
             }
         });
 
-        //get all warehouse products api
+        //get all warehouse products API
         app.get('/wh-products', async (req, res) => {
             const result = await whpcollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
-        // warehouse stock-in api
+        // update warehouse product API
+        app.patch("/wh-product/:id", async (req, res) => {
+            const id = req.params.id;
+            const updatedProduct = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+            const updateOperations = {
+                $set: {
+                    name: updatedProduct.name,
+                    price: updatedProduct.price,
+                    lot: updatedProduct.lot,
+                    expire: updatedProduct.expire,
+                    quantity: Number(updatedProduct.quantity),
+                    date: updatedProduct.date,
+                    addedby: updatedProduct.addedby,
+                    addedemail: updatedProduct.addedemail
+                },
+            };
+
+            const result = await whpcollections.updateOne(
+                filter,
+                updateOperations,
+                options
+            );
+            res.send(result);
+        });
+
+        // warehouse stock-in API
         app.post('/stock-in-wh', async (req, res) => {
             const newProduct = req.body;
 
@@ -74,7 +102,7 @@ async function run() {
                 if (existingProduct) {
                     const updatedProduct = await whsincollections.updateOne(
                         { _id: existingProduct._id },
-                        { $inc: { quantity: newProduct.quantity } }
+                        { $inc: { quantity: Number(newProduct.quantity) } }
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
