@@ -36,10 +36,10 @@ async function run() {
         // Add a new product - warehouse API
         app.post('/wh-products', async (req, res) => {
             const newProduct = req.body;
-            const { name, price, lot, expire } = newProduct;
+            const { productName, batch, expire } = newProduct;
 
             try {
-                const existingProduct = await whpcollections.findOne({ name, price, lot, expire });
+                const existingProduct = await whpcollections.findOne({ productName, batch, expire });
 
                 if (existingProduct) {
                     return res.status(409).send({ message: 'Product already exists with the same details' });
@@ -67,12 +67,18 @@ async function run() {
 
             const updateOperations = {
                 $set: {
-                    name: updatedProduct.name,
-                    price: updatedProduct.price,
-                    lot: updatedProduct.lot,
+                    productName: updatedProduct.productName,
+                    productCode: updatedProduct.productCode,
+                    batch: updatedProduct.batch,
                     expire: updatedProduct.expire,
-                    quantity: Number(updatedProduct.quantity),
+                    actualPrice: Number(updatedProduct.actualPrice),
+                    tradePrice: Number(updatedProduct.tradePrice),
+                    boxQuantity: Number(updatedProduct.boxQuantity),
+                    productWithBox: Number(updatedProduct.productWithBox),
+                    productWithoutBox: Number(updatedProduct.productWithoutBox),
+                    totalQuantity: updatedProduct.totalQuantity,
                     date: updatedProduct.date,
+                    remarks: updatedProduct.remarks,
                     addedby: updatedProduct.addedby,
                     addedemail: updatedProduct.addedemail
                 },
@@ -94,8 +100,7 @@ async function run() {
                 const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
                 const existingProduct = await whsincollections.findOne({
-                    name: newProduct.name,
-                    price: newProduct.price,
+                    productName: newProduct.productName,
                     lot: newProduct.lot,
                     expire: newProduct.expire,
                     date: productDate
@@ -104,7 +109,7 @@ async function run() {
                 if (existingProduct) {
                     const updatedProduct = await whsincollections.updateOne(
                         { _id: existingProduct._id },
-                        { $inc: { quantity: Number(newProduct.quantity) } }
+                        { $inc: { totalQuantity: Number(newProduct.totalQuantity) } }
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
@@ -124,15 +129,15 @@ async function run() {
 
             try {
                 const existingProduct = await depotpcollections.findOne({
-                    name: newProduct.name,
-                    lot: newProduct.lot,
+                    productName: newProduct.productName,
+                    batch: newProduct.batch,
                     expire: newProduct.expire,
                 });
 
                 if (existingProduct) {
                     const updatedProduct = await depotpcollections.updateOne(
                         { _id: existingProduct._id },
-                        { $inc: { quantity: Number(newProduct.quantity) } }
+                        { $inc: { quantity: Number(newProduct.totalQuantity) } }
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
@@ -159,8 +164,7 @@ async function run() {
                 const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
                 const existingProduct = await depotincollections.findOne({
-                    name: newProduct.name,
-                    price: newProduct.price,
+                    productName: newProduct.productName,
                     lot: newProduct.lot,
                     expire: newProduct.expire,
                     date: productDate
@@ -169,7 +173,7 @@ async function run() {
                 if (existingProduct) {
                     const updatedProduct = await depotincollections.updateOne(
                         { _id: existingProduct._id },
-                        { $inc: { quantity: Number(newProduct.quantity) } }
+                        { $inc: { totalQuantity: Number(newProduct.totalQuantity) } }
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
