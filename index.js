@@ -108,8 +108,17 @@ async function run() {
 
                 if (existingProduct) {
                     const updatedProduct = await whsincollections.updateOne(
-                        { _id: existingProduct._id },
-                        { $inc: { totalQuantity: Number(newProduct.totalQuantity) } }
+                        {
+                            _id: existingProduct._id,
+                        },
+                        {
+                            $inc: {
+                                boxQuantity: Number(newProduct.boxQuantity),
+                                productWithBox: Number(newProduct.productWithBox),
+                                productWithoutBox: Number(newProduct.productWithoutBox),
+                                totalQuantity: Number(newProduct.totalQuantity),
+                            }
+                        }
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
