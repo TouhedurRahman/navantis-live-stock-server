@@ -73,14 +73,7 @@ async function run() {
                     expire: updatedProduct.expire,
                     actualPrice: Number(updatedProduct.actualPrice),
                     tradePrice: Number(updatedProduct.tradePrice),
-                    boxQuantity: Number(updatedProduct.boxQuantity),
-                    productWithBox: Number(updatedProduct.productWithBox),
-                    productWithoutBox: Number(updatedProduct.productWithoutBox),
-                    totalQuantity: updatedProduct.totalQuantity,
-                    date: updatedProduct.date,
-                    remarks: updatedProduct.remarks,
-                    addedby: updatedProduct.addedby,
-                    addedemail: updatedProduct.addedemail
+                    totalQuantity: Number(updatedProduct.totalQuantity),
                 },
             };
 
@@ -101,17 +94,20 @@ async function run() {
 
                 const existingProduct = await whsincollections.findOne({
                     productName: newProduct.productName,
-                    lot: newProduct.lot,
+                    batch: newProduct.batch,
                     expire: newProduct.expire,
                     date: productDate
                 });
 
                 if (existingProduct) {
                     const updatedProduct = await whsincollections.updateOne(
+                        { _id: existingProduct._id },
                         {
-                            _id: existingProduct._id,
-                        },
-                        {
+                            $set: {
+                                actualPrice: Number(newProduct.actualPrice),
+                                tradePrice: Number(newProduct.tradePrice),
+                                remarks: newProduct.remarks
+                            },
                             $inc: {
                                 boxQuantity: Number(newProduct.boxQuantity),
                                 productWithBox: Number(newProduct.productWithBox),
@@ -195,40 +191,6 @@ async function run() {
                 res.status(500).send({ message: 'Error processing stock-in', error });
             }
         });
-
-        /* app.post('/stock-in-wh', async (req, res) => {
-            const newProduct = req.body;
-            newProduct.createdAt = new Date();
-            const result = await whsincollections.insertOne(newProduct);
-            res.send(result);
-        }); */
-
-        /* app.post('/stock-in-wh', async (req, res) => {
-            const newProduct = req.body;
-            const today = new Date().toISOString().split('T')[0];
-
-            try {
-                const existingProduct = await whsincollections.findOne({
-                    name: newProduct.name,
-                    createdAt: { $gte: new Date(today), $lt: new Date(today + 'T23:59:59.999Z') }
-                });
-
-                if (existingProduct) {
-                    const updatedProduct = await whsincollections.updateOne(
-                        { _id: existingProduct._id },
-                        { $inc: { quantity: newProduct.quantity } }
-                    );
-                    res.send({ message: 'Product quantity updated', updatedProduct });
-                } else {
-                    // newProduct.createdAt = new Date();
-                    const result = await whsincollections.insertOne(newProduct);
-                    res.send({ message: 'New product added', result });
-                }
-            } catch (error) {
-                console.error("Error processing stock-in:", error);
-                res.status(500).send({ message: 'Error processing stock-in', error });
-            }
-        }); */
 
         //get all warehouse stock-in API
         app.get('/stock-in-wh', async (req, res) => {
