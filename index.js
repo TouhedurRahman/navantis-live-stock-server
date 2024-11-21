@@ -30,6 +30,7 @@ async function run() {
         // Database collections
         const whpcollections = client.db('navantis_live_stock_db').collection('wh-products');
         const whsincollections = client.db('navantis_live_stock_db').collection('wh-stock-in');
+        const whsoutcollections = client.db('navantis_live_stock_db').collection('wh-stock-out');
         const depotpcollections = client.db('navantis_live_stock_db').collection('depot-products');
         const depotincollections = client.db('navantis_live_stock_db').collection('depot-stock-in');
 
@@ -120,6 +121,49 @@ async function run() {
                 } else {
                     newProduct.date = productDate;
                     const result = await whsincollections.insertOne(newProduct);
+                    res.send({ message: 'New product added', result });
+                }
+            } catch (error) {
+                console.error("Error processing stock-in:", error);
+                res.status(500).send({ message: 'Error processing stock-in', error });
+            }
+        });
+
+        // warehouse stock-out API
+        app.post('/stock-out-wh', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await whsoutcollections.findOne({
+                    productName: newProduct.productName,
+                    batch: newProduct.batch,
+                    expire: newProduct.expire,
+                    date: productDate
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await whsoutcollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            $set: {
+                                actualPrice: Number(newProduct.actualPrice),
+                                tradePrice: Number(newProduct.tradePrice),
+                                remarks: newProduct.remarks
+                            },
+                            $inc: {
+                                boxQuantity: Number(newProduct.boxQuantity),
+                                productWithBox: Number(newProduct.productWithBox),
+                                productWithoutBox: Number(newProduct.productWithoutBox),
+                                totalQuantity: Number(newProduct.totalQuantity),
+                            }
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    newProduct.date = productDate;
+                    const result = await whsoutcollections.insertOne(newProduct);
                     res.send({ message: 'New product added', result });
                 }
             } catch (error) {
