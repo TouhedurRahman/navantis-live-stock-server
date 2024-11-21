@@ -142,7 +142,7 @@ async function run() {
                 if (existingProduct) {
                     const updatedProduct = await depotpcollections.updateOne(
                         { _id: existingProduct._id },
-                        { $inc: { quantity: Number(newProduct.totalQuantity) } }
+                        { $inc: { totalQuantity: Number(newProduct.totalQuantity) } }
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
@@ -170,7 +170,7 @@ async function run() {
 
                 const existingProduct = await depotincollections.findOne({
                     productName: newProduct.productName,
-                    lot: newProduct.lot,
+                    batch: newProduct.batch,
                     expire: newProduct.expire,
                     date: productDate
                 });
