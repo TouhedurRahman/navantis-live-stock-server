@@ -19,7 +19,7 @@ const client = new MongoClient(uri, {
         version: ServerApiVersion.v1,
         strict: true,
         deprecationErrors: true,
-    }
+    },
 });
 
 async function run() {
@@ -40,10 +40,16 @@ async function run() {
             const { productName, batch, expire } = newProduct;
 
             try {
-                const existingProduct = await whpcollections.findOne({ productName, batch, expire });
+                const existingProduct = await whpcollections.findOne({
+                    productName,
+                    batch,
+                    expire,
+                });
 
                 if (existingProduct) {
-                    return res.status(409).send({ message: 'Product already exists with the same details' });
+                    return res
+                        .status(409)
+                        .send({ message: 'Product already exists with the same details' });
                 }
 
                 const result = await whpcollections.insertOne(newProduct);
@@ -53,15 +59,15 @@ async function run() {
             }
         });
 
-        //get all warehouse products API
+        // get all warehouse products API
         app.get('/wh-products', async (req, res) => {
             const result = await whpcollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
         // update warehouse product API
-        app.patch("/wh-product/:id", async (req, res) => {
-            const id = req.params.id;
+        app.patch('/wh-product/:id', async (req, res) => {
+            const { id } = req.params;
             const updatedProduct = req.body;
             const filter = { _id: new ObjectId(id) };
             const options = { upsert: true };
@@ -78,11 +84,13 @@ async function run() {
                 },
             };
 
-            const result = await whpcollections.updateOne(
-                filter,
-                updateOperations,
-                options
-            );
+            const result = await whpcollections.updateOne(filter, updateOperations, options);
+            res.send(result);
+        });
+
+        // get all warehouse stock-in API
+        app.get('/stock-in-wh', async (req, res) => {
+            const result = await whsincollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
@@ -97,7 +105,7 @@ async function run() {
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
-                    date: productDate
+                    date: productDate,
                 });
 
                 if (existingProduct) {
@@ -107,14 +115,14 @@ async function run() {
                             $set: {
                                 actualPrice: Number(newProduct.actualPrice),
                                 tradePrice: Number(newProduct.tradePrice),
-                                remarks: newProduct.remarks
+                                remarks: newProduct.remarks,
                             },
                             $inc: {
                                 boxQuantity: Number(newProduct.boxQuantity),
                                 productWithBox: Number(newProduct.productWithBox),
                                 productWithoutBox: Number(newProduct.productWithoutBox),
                                 totalQuantity: Number(newProduct.totalQuantity),
-                            }
+                            },
                         }
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
@@ -124,7 +132,7 @@ async function run() {
                     res.send({ message: 'New product added', result });
                 }
             } catch (error) {
-                console.error("Error processing stock-in:", error);
+                console.error('Error processing stock-in:', error);
                 res.status(500).send({ message: 'Error processing stock-in', error });
             }
         });
@@ -140,7 +148,7 @@ async function run() {
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
-                    date: productDate
+                    date: productDate,
                 });
 
                 if (existingProduct) {
@@ -150,14 +158,14 @@ async function run() {
                             $set: {
                                 actualPrice: Number(newProduct.actualPrice),
                                 tradePrice: Number(newProduct.tradePrice),
-                                remarks: newProduct.remarks
+                                remarks: newProduct.remarks,
                             },
                             $inc: {
                                 boxQuantity: Number(newProduct.boxQuantity),
                                 productWithBox: Number(newProduct.productWithBox),
                                 productWithoutBox: Number(newProduct.productWithoutBox),
                                 totalQuantity: Number(newProduct.totalQuantity),
-                            }
+                            },
                         }
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
@@ -167,9 +175,15 @@ async function run() {
                     res.send({ message: 'New product added', result });
                 }
             } catch (error) {
-                console.error("Error processing stock-in:", error);
+                console.error('Error processing stock-in:', error);
                 res.status(500).send({ message: 'Error processing stock-in', error });
             }
+        });
+
+        // get all warehouse stock out API
+        app.get('/stock-out-wh', async (req, res) => {
+            const result = await whsoutcollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
         });
 
         // add depot products API
@@ -194,12 +208,12 @@ async function run() {
                     res.send({ message: 'Depot new product added', result });
                 }
             } catch (error) {
-                console.error("Error add depot:", error);
+                console.error('Error add depot:', error);
                 res.status(500).send({ message: 'Error add depot', error });
             }
         });
 
-        //get all depot products API
+        // get all depot products API
         app.get('/depot-products', async (req, res) => {
             const result = await depotpcollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
@@ -216,7 +230,7 @@ async function run() {
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
-                    date: productDate
+                    date: productDate,
                 });
 
                 if (existingProduct) {
@@ -231,25 +245,19 @@ async function run() {
                     res.send({ message: 'Depot new product added', result });
                 }
             } catch (error) {
-                console.error("Error processing stock-in:", error);
+                console.error('Error processing stock-in:', error);
                 res.status(500).send({ message: 'Error processing stock-in', error });
             }
         });
 
-        //get all warehouse stock-in API
-        app.get('/stock-in-wh', async (req, res) => {
-            const result = await whsincollections.find().sort({ _id: -1 }).toArray();
-            res.send(result);
-        });
-
-        //get all depot stock-in API
+        // get all depot stock-in API
         app.get('/stock-in-depot', async (req, res) => {
             const result = await depotincollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        await client.db('admin').command({ ping: 1 });
         console.log("Pinged your deployment. You're successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
@@ -258,9 +266,8 @@ async function run() {
 }
 run().catch(console.dir);
 
-
 app.get('/', (req, res) => {
-    res.send("✅ Database Successfully Connected!");
+    res.send('✅ Database Successfully Connected!');
 });
 
 app.listen(port, () => {
