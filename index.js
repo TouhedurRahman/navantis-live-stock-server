@@ -31,6 +31,7 @@ async function run() {
         const whpcollections = client.db('navantis_live_stock_db').collection('wh-products');
         const whsincollections = client.db('navantis_live_stock_db').collection('wh-stock-in');
         const whsoutcollections = client.db('navantis_live_stock_db').collection('wh-stock-out');
+        const whdamagedcollections = client.db('navantis_live_stock_db').collection('wh-damaged-product');
         const depotpcollections = client.db('navantis_live_stock_db').collection('depot-products');
         const depotincollections = client.db('navantis_live_stock_db').collection('depot-stock-in');
 
@@ -184,6 +185,44 @@ async function run() {
         app.get('/stock-out-wh', async (req, res) => {
             const result = await whsoutcollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
+        });
+
+        // warehouse damaged-product API
+        app.post('/damaged-in-wh', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await whdamagedcollections.findOne({
+                    productName: newProduct.productName,
+                    batch: newProduct.batch,
+                    expire: newProduct.expire,
+                    date: productDate,
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await whdamagedcollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            $set: {
+                                remarks: newProduct.remarks,
+                            },
+                            $inc: {
+                                totalQuantity: Number(newProduct.totalQuantity),
+                            },
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    newProduct.date = productDate;
+                    const result = await whdamagedcollections.insertOne(newProduct);
+                    res.send({ message: 'Damaged product added', result });
+                }
+            } catch (error) {
+                console.error('Error processing stock-in:', error);
+                res.status(500).send({ message: 'Error processing stock-in', error });
+            }
         });
 
         // add depot products API
