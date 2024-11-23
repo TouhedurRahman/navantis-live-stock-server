@@ -225,6 +225,12 @@ async function run() {
             }
         });
 
+        // get all damaged product API
+        app.get('/damaged-in-wh', async (req, res) => {
+            const result = await whdamagedcollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         // add depot products API
         app.post('/depot-products', async (req, res) => {
             const newProduct = req.body;
