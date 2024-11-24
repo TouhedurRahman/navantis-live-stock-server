@@ -33,6 +33,7 @@ async function run() {
         const whsoutcollections = client.db('navantis_live_stock_db').collection('wh-stock-out');
         const whdamagedcollections = client.db('navantis_live_stock_db').collection('wh-damaged-product');
         const depotpcollections = client.db('navantis_live_stock_db').collection('depot-products');
+        const depotexpcollections = client.db('navantis_live_stock_db').collection('depot-expired');
         const depotincollections = client.db('navantis_live_stock_db').collection('depot-stock-in');
 
         // Add a new product - warehouse API
@@ -294,6 +295,44 @@ async function run() {
 			const result = await depotpcollections.deleteOne(query);
 			res.send(result);
 		});
+
+        // depot expired-product API
+        app.post('/expired-in-depot', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await depotexpcollections.findOne({
+                    productName: newProduct.productName,
+                    batch: newProduct.batch,
+                    expire: newProduct.expire,
+                    // date: productDate,
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await depotexpcollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            /* $set: {
+                                remarks: newProduct.remarks,
+                            }, */
+                            $inc: {
+                                totalQuantity: Number(newProduct.totalQuantity),
+                            },
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    // newProduct.date = productDate;
+                    const result = await depotexpcollections.insertOne(newProduct);
+                    res.send({ message: 'Damaged product added', result });
+                }
+            } catch (error) {
+                console.error('Error processing stock-in:', error);
+                res.status(500).send({ message: 'Error processing stock-in', error });
+            }
+        });
 
         // Depot stock-in API
         app.post('/stock-in-depot', async (req, res) => {
