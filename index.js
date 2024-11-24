@@ -264,6 +264,29 @@ async function run() {
             res.send(result);
         });
 
+        // update depot product API
+        app.patch('/depot-product/:id', async (req, res) => {
+            const { id } = req.params;
+            const updatedProduct = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+            const updateOperations = {
+                $set: {
+                    productName: updatedProduct.productName,
+                    productCode: updatedProduct.productCode,
+                    batch: updatedProduct.batch,
+                    expire: updatedProduct.expire,
+                    actualPrice: Number(updatedProduct.actualPrice),
+                    tradePrice: Number(updatedProduct.tradePrice),
+                    totalQuantity: Number(updatedProduct.totalQuantity),
+                },
+            };
+
+            const result = await depotpcollections.updateOne(filter, updateOperations, options);
+            res.send(result);
+        });
+
         // Depot stock-in API
         app.post('/stock-in-depot', async (req, res) => {
             const newProduct = req.body;
