@@ -287,6 +287,14 @@ async function run() {
             res.send(result);
         });
 
+        // delete depot expired product API
+		app.delete('/depot-product/:id', async (req, res) => {
+			const id = req.params.id;
+			const query = { _id: new ObjectId(id) };
+			const result = await depotpcollections.deleteOne(query);
+			res.send(result);
+		});
+
         // Depot stock-in API
         app.post('/stock-in-depot', async (req, res) => {
             const newProduct = req.body;
