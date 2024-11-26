@@ -79,6 +79,12 @@ async function run() {
             }
         });
 
+        // get all purchase order API
+        app.get('/purchase-order', async (req, res) => {
+            const result = await adminPuchaseCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         // Add a new product - warehouse API
         app.post('/wh-products', async (req, res) => {
             const newProduct = req.body;
