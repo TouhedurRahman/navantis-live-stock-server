@@ -31,6 +31,9 @@ async function run() {
         // admin collections
         const adminPuchaseCollections = client.db('navantis_live_stock_db').collection('order_list'); 
 
+        // pending stock in collections
+        const pendingStockinCollections = client.db('navantis_live_stock_db').collection('pending_stock_in_wh'); 
+
         // warehouse collections
         const whpcollections = client.db('navantis_live_stock_db').collection('wh-products');
         const whsincollections = client.db('navantis_live_stock_db').collection('wh-stock-in');
@@ -47,11 +50,11 @@ async function run() {
             const newProduct = req.body;
 
             try {
-                const productDate = newProduct.orderDate || new Date().toISOString().split('T')[0];
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
                 const existingProduct = await adminPuchaseCollections.findOne({
                     productName: newProduct.productName,
-                    orderDate: productDate,
+                    date: productDate,
                 });
 
                 if (existingProduct) {
@@ -83,6 +86,43 @@ async function run() {
         app.get('/purchase-order', async (req, res) => {
             const result = await adminPuchaseCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
+        });
+
+        // pending warehouse stockin API
+        app.post('/pending-stockin-wh', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await pendingStockinCollections.findOne({
+                    productName: newProduct.productName,
+                    date: productDate,
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await pendingStockinCollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            $set: {
+                                actualPrice: Number(newProduct.actualPrice),
+                                tradePrice: Number(newProduct.tradePrice),
+                                status: newProduct.status
+                            },
+                            $inc: {
+                                totalQuantity: Number(newProduct.totalQuantity),
+                            },
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    const result = await pendingStockinCollections.insertOne(newProduct);
+                    res.send({ message: 'New product added', result });
+                }
+            } catch (error) {
+                console.error('Error processing stock-in:', error);
+                res.status(500).send({ message: 'Error processing stock-in', error });
+            }
         });
 
         // Add a new product - warehouse API
