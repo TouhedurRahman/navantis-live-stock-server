@@ -27,14 +27,57 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        // Database collections
+        /***** Database collections *****/
+        // admin collections
+        const adminPuchaseCollections = client.db('navantis_live_stock_db').collection('order_list'); 
+
+        // warehouse collections
         const whpcollections = client.db('navantis_live_stock_db').collection('wh-products');
         const whsincollections = client.db('navantis_live_stock_db').collection('wh-stock-in');
         const whsoutcollections = client.db('navantis_live_stock_db').collection('wh-stock-out');
         const whdamagedcollections = client.db('navantis_live_stock_db').collection('wh-damaged-product');
+
+        // depot collections
         const depotpcollections = client.db('navantis_live_stock_db').collection('depot-products');
         const depotexpcollections = client.db('navantis_live_stock_db').collection('depot-expired');
         const depotincollections = client.db('navantis_live_stock_db').collection('depot-stock-in');
+
+        // admin purchase order API
+        app.post('/purchase-order', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.orderDate || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await adminPuchaseCollections.findOne({
+                    productName: newProduct.productName,
+                    orderDate: productDate,
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await adminPuchaseCollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            $set: {
+                                actualPrice: Number(newProduct.actualPrice),
+                                tradePrice: Number(newProduct.tradePrice),
+                            },
+                            $inc: {
+                                totalQuantity: Number(newProduct.totalQuantity),
+                            },
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    // newProduct.date = productDate;
+                    const result = await adminPuchaseCollections.insertOne(newProduct);
+                    res.send({ message: 'New product added', result });
+                }
+            } catch (error) {
+                console.error('Error processing stock-in:', error);
+                res.status(500).send({ message: 'Error processing stock-in', error });
+            }
+        });
 
         // Add a new product - warehouse API
         app.post('/wh-products', async (req, res) => {
