@@ -29,10 +29,10 @@ async function run() {
 
         /***** Database collections *****/
         // admin collections
-        const adminPuchaseCollections = client.db('navantis_live_stock_db').collection('order_list'); 
+        const adminPuchaseCollections = client.db('navantis_live_stock_db').collection('order_list');
 
-        // pending stock in collections
-        const pendingStockinCollections = client.db('navantis_live_stock_db').collection('pending_stock_in_wh'); 
+        // order stock collections
+        const orderStockCollections = client.db('navantis_live_stock_db').collection('order_stock_wh');
 
         // warehouse collections
         const whpcollections = client.db('navantis_live_stock_db').collection('wh-products');
@@ -88,20 +88,20 @@ async function run() {
             res.send(result);
         });
 
-        // pending warehouse stockin API
-        app.post('/pending-stockin-wh', async (req, res) => {
+        // order stockin warehouse API
+        app.post('/order-stock-wh', async (req, res) => {
             const newProduct = req.body;
 
             try {
                 const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
-                const existingProduct = await pendingStockinCollections.findOne({
+                const existingProduct = await orderStockCollections.findOne({
                     productName: newProduct.productName,
                     date: productDate,
                 });
 
                 if (existingProduct) {
-                    const updatedProduct = await pendingStockinCollections.updateOne(
+                    const updatedProduct = await orderStockCollections.updateOne(
                         { _id: existingProduct._id },
                         {
                             $set: {
@@ -116,13 +116,19 @@ async function run() {
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
-                    const result = await pendingStockinCollections.insertOne(newProduct);
+                    const result = await orderStockCollections.insertOne(newProduct);
                     res.send({ message: 'New product added', result });
                 }
             } catch (error) {
                 console.error('Error processing stock-in:', error);
                 res.status(500).send({ message: 'Error processing stock-in', error });
             }
+        });
+
+        // get all order stockin warehouse API
+        app.get('/order-stock-wh', async (req, res) => {
+            const result = await orderStockCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
         });
 
         // Add a new product - warehouse API
@@ -378,12 +384,12 @@ async function run() {
         });
 
         // delete depot expired product API
-		app.delete('/depot-product/:id', async (req, res) => {
-			const id = req.params.id;
-			const query = { _id: new ObjectId(id) };
-			const result = await depotpcollections.deleteOne(query);
-			res.send(result);
-		});
+        app.delete('/depot-product/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await depotpcollections.deleteOne(query);
+            res.send(result);
+        });
 
         // depot expired-product API
         app.post('/expired-in-depot', async (req, res) => {
