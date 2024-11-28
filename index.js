@@ -170,6 +170,12 @@ async function run() {
             res.send(result);
         });
 
+        // get all order stockin request API
+        app.get('/wh-req', async (req, res) => {
+            const result = await orderStockCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         // Add a new product - warehouse API
         app.post('/wh-products', async (req, res) => {
             const newProduct = req.body;
