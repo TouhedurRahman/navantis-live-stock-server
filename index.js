@@ -131,6 +131,45 @@ async function run() {
             res.send(result);
         });
 
+        // order stockin request API
+        app.patch('/wh-req/:id', async (req, res) => {
+            const { id } = req.params;
+            const updatedProduct = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+            const updateOperations = {
+                $set: {
+                    productName: updatedProduct.productName,
+                    productCode: updatedProduct.productCode,
+                    batch: updatedProduct.batch,
+                    expire: updatedProduct.expire,
+
+                    actualPrice: updatedProduct.actualPrice,
+                    tradePrice: updatedProduct.tradePrice,
+
+                    boxQuantity: Number(updatedProduct.boxQuantity),
+                    productWithBox: Number(updatedProduct.productWithBox),
+                    productWithoutBox: Number(updatedProduct.productWithoutBox),
+
+                    orderQuantity: Number(updatedProduct.orderQuantity),
+                    totalQuantity: Number(updatedProduct.totalQuantity),
+
+                    orderDate: updatedProduct.orderDate,
+                    date: updatedProduct.date,
+
+                    remarks: updatedProduct.remarks,
+                    status: updatedProduct.status,
+
+                    addedby: updatedProduct.addedby,
+                    addedemail: updatedProduct.addedemail
+                },
+            };
+
+            const result = await orderStockCollections.updateOne(filter, updateOperations, options);
+            res.send(result);
+        });
+
         // Add a new product - warehouse API
         app.post('/wh-products', async (req, res) => {
             const newProduct = req.body;
