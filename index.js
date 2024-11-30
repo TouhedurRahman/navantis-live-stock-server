@@ -35,15 +35,15 @@ async function run() {
         const orderStockCollections = client.db('navantis_live_stock_db').collection('order_stock_wh');
 
         // warehouse collections
-        const whpcollections = client.db('navantis_live_stock_db').collection('wh-products');
-        const whsincollections = client.db('navantis_live_stock_db').collection('wh-stock-in');
-        const whsoutcollections = client.db('navantis_live_stock_db').collection('wh-stock-out');
-        const whdamagedcollections = client.db('navantis_live_stock_db').collection('wh-damaged-product');
+        const whproductsCollections = client.db('navantis_live_stock_db').collection('wh_products');
+        const whStockInCollections = client.db('navantis_live_stock_db').collection('wh_stock_in');
+        const whStockOutCollections = client.db('navantis_live_stock_db').collection('wh_stock_out');
+        const whDamagedProductsCollections = client.db('navantis_live_stock_db').collection('wh_damaged_products');
 
         // depot collections
-        const depotpcollections = client.db('navantis_live_stock_db').collection('depot-products');
-        const depotexpcollections = client.db('navantis_live_stock_db').collection('depot-expired');
-        const depotincollections = client.db('navantis_live_stock_db').collection('depot-stock-in');
+        const depotProductsCollections = client.db('navantis_live_stock_db').collection('depot_products');
+        const depotStockInCollections = client.db('navantis_live_stock_db').collection('depot_stock_in');
+        const depotExpCollections = client.db('navantis_live_stock_db').collection('depot_expired');
 
         // admin purchase order API
         app.post('/purchase-order', async (req, res) => {
@@ -182,7 +182,7 @@ async function run() {
             const { productName, batch, expire } = newProduct;
 
             try {
-                const existingProduct = await whpcollections.findOne({
+                const existingProduct = await whproductsCollections.findOne({
                     productName,
                     batch,
                     expire,
@@ -194,7 +194,7 @@ async function run() {
                         .send({ message: 'Product already exists with the same details' });
                 }
 
-                const result = await whpcollections.insertOne(newProduct);
+                const result = await whproductsCollections.insertOne(newProduct);
                 res.send(result);
             } catch (error) {
                 res.status(500).send({ message: 'Error adding product', error });
@@ -203,7 +203,7 @@ async function run() {
 
         // get all warehouse products API
         app.get('/wh-products', async (req, res) => {
-            const result = await whpcollections.find().sort({ _id: -1 }).toArray();
+            const result = await whproductsCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
@@ -226,13 +226,13 @@ async function run() {
                 },
             };
 
-            const result = await whpcollections.updateOne(filter, updateOperations, options);
+            const result = await whproductsCollections.updateOne(filter, updateOperations, options);
             res.send(result);
         });
 
         // get all warehouse stock-in API
         app.get('/stock-in-wh', async (req, res) => {
-            const result = await whsincollections.find().sort({ _id: -1 }).toArray();
+            const result = await whStockInCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
@@ -243,7 +243,7 @@ async function run() {
             try {
                 const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
-                const existingProduct = await whsincollections.findOne({
+                const existingProduct = await whStockInCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
@@ -251,7 +251,7 @@ async function run() {
                 });
 
                 if (existingProduct) {
-                    const updatedProduct = await whsincollections.updateOne(
+                    const updatedProduct = await whStockInCollections.updateOne(
                         { _id: existingProduct._id },
                         {
                             $set: {
@@ -270,7 +270,7 @@ async function run() {
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
                     newProduct.date = productDate;
-                    const result = await whsincollections.insertOne(newProduct);
+                    const result = await whStockInCollections.insertOne(newProduct);
                     res.send({ message: 'New product added', result });
                 }
             } catch (error) {
@@ -286,7 +286,7 @@ async function run() {
             try {
                 const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
-                const existingProduct = await whsoutcollections.findOne({
+                const existingProduct = await whStockOutCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
@@ -294,7 +294,7 @@ async function run() {
                 });
 
                 if (existingProduct) {
-                    const updatedProduct = await whsoutcollections.updateOne(
+                    const updatedProduct = await whStockOutCollections.updateOne(
                         { _id: existingProduct._id },
                         {
                             $set: {
@@ -313,7 +313,7 @@ async function run() {
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
                     newProduct.date = productDate;
-                    const result = await whsoutcollections.insertOne(newProduct);
+                    const result = await whStockOutCollections.insertOne(newProduct);
                     res.send({ message: 'New product added', result });
                 }
             } catch (error) {
@@ -324,7 +324,7 @@ async function run() {
 
         // get all warehouse stock out API
         app.get('/stock-out-wh', async (req, res) => {
-            const result = await whsoutcollections.find().sort({ _id: -1 }).toArray();
+            const result = await whStockOutCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
@@ -335,7 +335,7 @@ async function run() {
             try {
                 const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
-                const existingProduct = await whdamagedcollections.findOne({
+                const existingProduct = await whDamagedProductsCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
@@ -343,7 +343,7 @@ async function run() {
                 });
 
                 if (existingProduct) {
-                    const updatedProduct = await whdamagedcollections.updateOne(
+                    const updatedProduct = await whDamagedProductsCollections.updateOne(
                         { _id: existingProduct._id },
                         {
                             $set: {
@@ -357,7 +357,7 @@ async function run() {
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
                     newProduct.date = productDate;
-                    const result = await whdamagedcollections.insertOne(newProduct);
+                    const result = await whDamagedProductsCollections.insertOne(newProduct);
                     res.send({ message: 'Damaged product added', result });
                 }
             } catch (error) {
@@ -368,7 +368,7 @@ async function run() {
 
         // get all damaged product API
         app.get('/damaged-in-wh', async (req, res) => {
-            const result = await whdamagedcollections.find().sort({ _id: -1 }).toArray();
+            const result = await whDamagedProductsCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
@@ -377,20 +377,20 @@ async function run() {
             const newProduct = req.body;
 
             try {
-                const existingProduct = await depotpcollections.findOne({
+                const existingProduct = await depotProductsCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                 });
 
                 if (existingProduct) {
-                    const updatedProduct = await depotpcollections.updateOne(
+                    const updatedProduct = await depotProductsCollections.updateOne(
                         { _id: existingProduct._id },
                         { $inc: { totalQuantity: Number(newProduct.totalQuantity) } }
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
-                    const result = await depotpcollections.insertOne(newProduct);
+                    const result = await depotProductsCollections.insertOne(newProduct);
                     res.send({ message: 'Depot new product added', result });
                 }
             } catch (error) {
@@ -401,7 +401,7 @@ async function run() {
 
         // get all depot products API
         app.get('/depot-products', async (req, res) => {
-            const result = await depotpcollections.find().sort({ _id: -1 }).toArray();
+            const result = await depotProductsCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
@@ -424,7 +424,7 @@ async function run() {
                 },
             };
 
-            const result = await depotpcollections.updateOne(filter, updateOperations, options);
+            const result = await depotProductsCollections.updateOne(filter, updateOperations, options);
             res.send(result);
         });
 
@@ -432,7 +432,7 @@ async function run() {
         app.delete('/depot-product/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
-            const result = await depotpcollections.deleteOne(query);
+            const result = await depotProductsCollections.deleteOne(query);
             res.send(result);
         });
 
@@ -443,7 +443,7 @@ async function run() {
             try {
                 const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
-                const existingProduct = await depotexpcollections.findOne({
+                const existingProduct = await depotExpCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
@@ -451,7 +451,7 @@ async function run() {
                 });
 
                 if (existingProduct) {
-                    const updatedProduct = await depotexpcollections.updateOne(
+                    const updatedProduct = await depotExpCollections.updateOne(
                         { _id: existingProduct._id },
                         {
                             /* $set: {
@@ -465,7 +465,7 @@ async function run() {
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
                     // newProduct.date = productDate;
-                    const result = await depotexpcollections.insertOne(newProduct);
+                    const result = await depotExpCollections.insertOne(newProduct);
                     res.send({ message: 'Damaged product added', result });
                 }
             } catch (error) {
@@ -476,7 +476,7 @@ async function run() {
 
         // get all depot expired product API
         app.get('/expired-in-depot', async (req, res) => {
-            const result = await depotexpcollections.find().sort({ _id: -1 }).toArray();
+            const result = await depotExpCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
@@ -487,7 +487,7 @@ async function run() {
             try {
                 const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
-                const existingProduct = await depotincollections.findOne({
+                const existingProduct = await depotStockInCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
@@ -495,14 +495,14 @@ async function run() {
                 });
 
                 if (existingProduct) {
-                    const updatedProduct = await depotincollections.updateOne(
+                    const updatedProduct = await depotStockInCollections.updateOne(
                         { _id: existingProduct._id },
                         { $inc: { totalQuantity: Number(newProduct.totalQuantity) } }
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
                     newProduct.date = productDate;
-                    const result = await depotincollections.insertOne(newProduct);
+                    const result = await depotStockInCollections.insertOne(newProduct);
                     res.send({ message: 'Depot new product added', result });
                 }
             } catch (error) {
@@ -513,7 +513,7 @@ async function run() {
 
         // get all depot stock-in API
         app.get('/stock-in-depot', async (req, res) => {
-            const result = await depotincollections.find().sort({ _id: -1 }).toArray();
+            const result = await depotStockInCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
