@@ -54,6 +54,8 @@ async function run() {
 
                 const existingProduct = await adminPuchaseCollections.findOne({
                     productName: newProduct.productName,
+                    batch: newProduct.batch,
+                    expire: newProduct.expire,
                     date: productDate,
                 });
 
@@ -97,6 +99,8 @@ async function run() {
 
                 const existingProduct = await orderStockCollections.findOne({
                     productName: newProduct.productName,
+                    batch: newProduct.batch,
+                    expire: newProduct.expire,
                     date: productDate,
                 });
 
