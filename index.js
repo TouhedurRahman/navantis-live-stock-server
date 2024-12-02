@@ -215,23 +215,63 @@ async function run() {
         app.patch('/wh-product/:id', async (req, res) => {
             const { id } = req.params;
             const updatedProduct = req.body;
-            const filter = { _id: new ObjectId(id) };
-            const options = { upsert: true };
 
-            const updateOperations = {
-                $set: {
-                    productName: updatedProduct.productName,
-                    productCode: updatedProduct.productCode,
-                    batch: updatedProduct.batch,
-                    expire: updatedProduct.expire,
-                    actualPrice: Number(updatedProduct.actualPrice),
-                    tradePrice: Number(updatedProduct.tradePrice),
-                    totalQuantity: Number(updatedProduct.totalQuantity),
-                },
-            };
+            try {
+                const existingProducts = await whproductsCollections.find({ productName: updatedProduct.productName }).toArray();
 
-            const result = await whproductsCollections.updateOne(filter, updateOperations, options);
-            res.send(result);
+                if (existingProducts.length > 0) {
+                    await whproductsCollections.updateMany(
+                        { productName: updatedProduct.productName },
+                        {
+                            $set: {
+                                actualPrice: Number(updatedProduct.actualPrice),
+                                tradePrice: Number(updatedProduct.tradePrice),
+                            },
+                        }
+                    );
+                    const filter = { 
+                        productName: updatedProduct.productName,
+                        batch: updatedProduct.batch,
+                        expire: updatedProduct.expire
+                    };
+                    const incrementQuantity = {
+                        $inc: { totalQuantity: Number(updatedProduct.totalQuantity) },
+                    };
+
+                    const incrementResult = await whproductsCollections.updateOne(filter, incrementQuantity);
+
+                    res.send({
+                        message: 'Product updated successfully',
+                        priceUpdate: true,
+                        quantityIncrement: incrementResult.modifiedCount > 0,
+                    });
+                } else {
+                    const filter = { _id: new ObjectId(id) };
+                    const options = { upsert: true };
+                    const updateOperations = {
+                        $set: {
+                            productName: updatedProduct.productName,
+                            productCode: updatedProduct.productCode,
+                            batch: updatedProduct.batch,
+                            expire: updatedProduct.expire,
+                            actualPrice: Number(updatedProduct.actualPrice),
+                            tradePrice: Number(updatedProduct.tradePrice),
+                            totalQuantity: Number(updatedProduct.totalQuantity),
+                        },
+                    };
+
+                    const result = await whproductsCollections.updateOne(filter, updateOperations, options);
+                    res.send({
+                        message: 'Product updated successfully',
+                        priceUpdate: false,
+                        quantityIncrement: false,
+                        result,
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating product:', error);
+                res.status(500).send({ error: 'Failed to update product' });
+            }
         });
 
         // get all warehouse stock-in API
