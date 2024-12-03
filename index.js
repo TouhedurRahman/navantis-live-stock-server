@@ -35,7 +35,7 @@ async function run() {
         const orderStockCollections = client.db('navantis_live_stock_db').collection('order_stock_wh');
 
         // warehouse collections
-        const whproductsCollections = client.db('navantis_live_stock_db').collection('wh_products');
+        const whProductsCollections = client.db('navantis_live_stock_db').collection('wh_products');
         const whStockInCollections = client.db('navantis_live_stock_db').collection('wh_stock_in');
         const whStockOutCollections = client.db('navantis_live_stock_db').collection('wh_stock_out');
         const whDamagedProductsCollections = client.db('navantis_live_stock_db').collection('wh_damaged_products');
@@ -186,7 +186,7 @@ async function run() {
             const { productName, batch, expire } = newProduct;
 
             try {
-                const existingProduct = await whproductsCollections.findOne({
+                const existingProduct = await whProductsCollections.findOne({
                     productName,
                     batch,
                     expire,
@@ -198,7 +198,7 @@ async function run() {
                         .send({ message: 'Product already exists with the same details' });
                 }
 
-                const result = await whproductsCollections.insertOne(newProduct);
+                const result = await whProductsCollections.insertOne(newProduct);
                 res.send(result);
             } catch (error) {
                 res.status(500).send({ message: 'Error adding product', error });
@@ -207,7 +207,7 @@ async function run() {
 
         // get all warehouse products API
         app.get('/wh-products', async (req, res) => {
-            const result = await whproductsCollections.find().sort({ _id: -1 }).toArray();
+            const result = await whProductsCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
@@ -217,10 +217,10 @@ async function run() {
             const updatedProduct = req.body;
 
             try {
-                const existingProducts = await whproductsCollections.find({ productName: updatedProduct.productName }).toArray();
+                const existingProducts = await whProductsCollections.find({ productName: updatedProduct.productName }).toArray();
 
                 if (existingProducts.length > 0) {
-                    await whproductsCollections.updateMany(
+                    await whProductsCollections.updateMany(
                         { productName: updatedProduct.productName },
                         {
                             $set: {
@@ -238,7 +238,7 @@ async function run() {
                         $inc: { totalQuantity: Number(updatedProduct.totalQuantity) },
                     };
 
-                    const incrementResult = await whproductsCollections.updateOne(filter, incrementQuantity);
+                    const incrementResult = await whProductsCollections.updateOne(filter, incrementQuantity);
 
                     res.send({
                         message: 'Product updated successfully',
@@ -260,7 +260,7 @@ async function run() {
                         },
                     };
 
-                    const result = await whproductsCollections.updateOne(filter, updateOperations, options);
+                    const result = await whProductsCollections.updateOne(filter, updateOperations, options);
                     res.send({
                         message: 'Product updated successfully',
                         priceUpdate: false,
