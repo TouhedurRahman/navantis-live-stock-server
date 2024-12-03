@@ -34,6 +34,10 @@ async function run() {
         // order stock collections
         const orderStockCollections = client.db('navantis_live_stock_db').collection('order_stock_wh');
 
+        // price changing collections
+        const priceUpdateCollections = client.db('navantis_live_stock_db').collection('price_update');
+
+
         // warehouse collections
         const whProductsCollections = client.db('navantis_live_stock_db').collection('wh_products');
         const whStockInCollections = client.db('navantis_live_stock_db').collection('wh_stock_in');
@@ -87,6 +91,46 @@ async function run() {
         app.get('/purchase-order', async (req, res) => {
             const result = await adminPuchaseCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
+        });
+
+        // add a new price change details API
+        app.post('/price-update', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await priceUpdateCollections.findOne({
+                    productName: newProduct.productName,
+                    date: productDate,
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await priceUpdateCollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            $set: {
+                                actualPrice: Number(newProduct.actualPrice),
+                                initialActualPrice: Number(newProduct.initialActualPrice),
+
+                                tradePrice: Number(newProduct.tradePrice),
+                                initialTradePrice: Number(newProduct.initialTradePrice),
+                            },
+                            $inc: {
+                                initialQuantity: Number(newProduct.initialQuantity),
+                                newQuantity: Number(newProduct.newQuantity),
+                            },
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    const result = await priceUpdateCollections.insertOne(newProduct);
+                    res.send({ message: 'New product added', result });
+                }
+            } catch (error) {
+                console.error('Error price changing:', error);
+                res.status(500).send({ message: 'Error price changing', error });
+            }
         });
 
         // order stockin warehouse API
