@@ -50,13 +50,13 @@ async function run() {
             const newProduct = req.body;
 
             try {
-                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+                const productDate = newProduct.orderDate || new Date().toISOString().split('T')[0];
 
                 const existingProduct = await adminPuchaseCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
-                    date: productDate,
+                    orderDate: productDate,
                 });
 
                 if (existingProduct) {
@@ -74,7 +74,6 @@ async function run() {
                     );
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
-                    // newProduct.date = productDate;
                     const result = await adminPuchaseCollections.insertOne(newProduct);
                     res.send({ message: 'New product added', result });
                 }
@@ -95,13 +94,13 @@ async function run() {
             const newProduct = req.body;
 
             try {
-                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+                const productDate = newProduct.orderDate || new Date().toISOString().split('T')[0];
 
                 const existingProduct = await orderStockCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
-                    date: productDate,
+                    orderDate: productDate,
                 });
 
                 if (existingProduct) {
@@ -158,6 +157,7 @@ async function run() {
 
                     orderQuantity: Number(updatedProduct.orderQuantity),
                     totalQuantity: Number(updatedProduct.totalQuantity),
+                    missingQuantity: Number(updatedProduct.missingQuantity),
 
                     orderDate: updatedProduct.orderDate,
                     date: updatedProduct.date,
