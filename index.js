@@ -133,6 +133,12 @@ async function run() {
             }
         });
 
+        // get all price update API
+        app.get('/price-update', async (req, res) => {
+            const result = await priceUpdateCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         // order stockin warehouse API
         app.post('/order-stock-wh', async (req, res) => {
             const newProduct = req.body;
