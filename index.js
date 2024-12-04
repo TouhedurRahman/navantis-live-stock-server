@@ -286,7 +286,9 @@ async function run() {
                         expire: updatedProduct.expire
                     };
                     const incrementQuantity = {
-                        $inc: { totalQuantity: Number(updatedProduct.totalQuantity) },
+                        $set: { 
+                            totalQuantity: Number(updatedProduct.totalQuantity)
+                        },
                     };
 
                     const incrementResult = await whProductsCollections.updateOne(filter, incrementQuantity);
@@ -442,6 +444,7 @@ async function run() {
                         { _id: existingProduct._id },
                         {
                             $set: {
+                                staus: newProduct.status,
                                 remarks: newProduct.remarks,
                             },
                             $inc: {
