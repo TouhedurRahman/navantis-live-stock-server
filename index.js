@@ -115,9 +115,10 @@ async function run() {
 
                                 tradePrice: Number(newProduct.tradePrice),
                                 initialTradePrice: Number(newProduct.initialTradePrice),
+
+                                initialQuantity: Number(newProduct.initialQuantity),
                             },
                             $inc: {
-                                initialQuantity: Number(newProduct.initialQuantity),
                                 newQuantity: Number(newProduct.newQuantity),
                             },
                         }
