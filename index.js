@@ -42,7 +42,7 @@ async function run() {
         const whProductsCollections = client.db('navantis_live_stock_db').collection('wh_products');
         const whStockInCollections = client.db('navantis_live_stock_db').collection('wh_stock_in');
         const whStockOutCollections = client.db('navantis_live_stock_db').collection('wh_stock_out');
-        const whDamagedProductsCollections = client.db('navantis_live_stock_db').collection('wh_damaged_products');
+        const whDamagedProductsCollections = client.db('navantis_live_stock_db').collection('damaged_products');
 
         // depot collections
         const depotProductsCollections = client.db('navantis_live_stock_db').collection('depot_products');
