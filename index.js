@@ -448,7 +448,7 @@ async function run() {
                                 remarks: newProduct.remarks,
                             },
                             $inc: {
-                                totalQuantity: Number(newProduct.totalQuantity),
+                                damageQuantity: Number(newProduct.damageQuantity)
                             },
                         }
                     );
