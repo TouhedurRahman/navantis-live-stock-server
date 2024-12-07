@@ -444,7 +444,7 @@ async function run() {
                         { _id: existingProduct._id },
                         {
                             $set: {
-                                staus: newProduct.status,
+                                status: newProduct.status,
                                 remarks: newProduct.remarks,
                             },
                             $inc: {
@@ -467,6 +467,14 @@ async function run() {
         // get all damaged product API
         app.get('/damaged-in-wh', async (req, res) => {
             const result = await whDamagedProductsCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
+        // delete damaged product API
+        app.delete('/damaged-in-wh/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await whDamagedProductsCollections.deleteOne(query);
             res.send(result);
         });
 
