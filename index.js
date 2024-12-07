@@ -432,16 +432,17 @@ async function run() {
             try {
                 const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
-                const existingProduct = await whDamagedProductsCollections.findOne({
+                const existingPendingProduct = await whDamagedProductsCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
-                    date: productDate,
+                    status: "pending",
+                    date: productDate
                 });
 
-                if (existingProduct) {
+                if (existingPendingProduct) {
                     const updatedProduct = await whDamagedProductsCollections.updateOne(
-                        { _id: existingProduct._id },
+                        { _id: existingPendingProduct._id },
                         {
                             $set: {
                                 status: newProduct.status,
