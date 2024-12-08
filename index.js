@@ -30,21 +30,17 @@ async function run() {
         /***** Database collections *****/
         // admin collections
         const adminPuchaseCollections = client.db('navantis_live_stock_db').collection('order_list');
-
-        // order stock collections
-        const orderStockCollections = client.db('navantis_live_stock_db').collection('order_stock_wh');
-
-        // price changing collections
         const priceUpdateCollections = client.db('navantis_live_stock_db').collection('price_update');
 
-
         // warehouse collections
+        const orderStockCollections = client.db('navantis_live_stock_db').collection('order_stock_wh');
         const whProductsCollections = client.db('navantis_live_stock_db').collection('wh_products');
         const whStockInCollections = client.db('navantis_live_stock_db').collection('wh_stock_in');
         const whStockOutCollections = client.db('navantis_live_stock_db').collection('wh_stock_out');
         const whDamagedProductsCollections = client.db('navantis_live_stock_db').collection('damaged_products');
 
         // depot collections
+        const depotRequestCollections = client.db('navantis_live_stock_db').collection('depot_request');
         const depotProductsCollections = client.db('navantis_live_stock_db').collection('depot_products');
         const depotStockInCollections = client.db('navantis_live_stock_db').collection('depot_stock_in');
         const depotExpCollections = client.db('navantis_live_stock_db').collection('depot_expired');
@@ -477,6 +473,44 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const result = await whDamagedProductsCollections.deleteOne(query);
             res.send(result);
+        });
+
+        /******************** Depot Section ********************/
+
+        // depot request product API
+        app.post('/dpot-request', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.requestedDate || new Date().toISOString().split('T')[0];
+
+                const existingRequestedProduct = await depotRequestCollections.findOne({
+                    productName: newProduct.productName,
+                    status: "requested",
+                    // requestedDate: productDate
+                });
+
+                if (existingRequestedProduct) {
+                    const updatedProduct = await depotRequestCollections.updateOne(
+                        { _id: existingRequestedProduct._id },
+                        {
+                            $set: {
+                                requestedDate: newProduct.productDate
+                            },
+                            $inc: {
+                                requestedQuantity: Number(newProduct.requestedQuantity)
+                            },
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    const result = await depotRequestCollections.insertOne(newProduct);
+                    res.send({ message: 'Depot request added', result });
+                }
+            } catch (error) {
+                console.error('Error depot request:', error);
+                res.status(500).send({ message: 'Error depot request', error });
+            }
         });
 
         // add depot products API
