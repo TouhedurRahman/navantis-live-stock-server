@@ -524,6 +524,23 @@ async function run() {
             res.send(result);
         });
 
+        // depot request product update API
+        app.patch('/depot-request/:id', async (req, res) => {
+            const { id } = req.params;
+            const updatedProduct = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+            const updateOperations = {
+                $set: {
+                    ...updatedProduct
+                },
+            };
+
+            const result = await depotRequestCollections.updateOne(filter, updateOperations, options);
+            res.send(result);
+        });
+
         // delete depot request API
         app.delete('/depot-request/:id', async (req, res) => {
             const id = req.params.id;
