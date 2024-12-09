@@ -27,23 +27,26 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        /***** Database collections *****/
-        // admin collections
+        /******************** Database collections ********************/
+
+        /* admin collections */
         const adminPuchaseCollections = client.db('navantis_live_stock_db').collection('order_list');
         const priceUpdateCollections = client.db('navantis_live_stock_db').collection('price_update');
 
-        // warehouse collections
+        /* warehouse collections */
         const orderStockCollections = client.db('navantis_live_stock_db').collection('order_stock_wh');
         const whProductsCollections = client.db('navantis_live_stock_db').collection('wh_products');
         const whStockInCollections = client.db('navantis_live_stock_db').collection('wh_stock_in');
         const whStockOutCollections = client.db('navantis_live_stock_db').collection('wh_stock_out');
         const whDamagedProductsCollections = client.db('navantis_live_stock_db').collection('damaged_products');
 
-        // depot collections
+        /* depot collections */
         const depotRequestCollections = client.db('navantis_live_stock_db').collection('depot_request');
         const depotProductsCollections = client.db('navantis_live_stock_db').collection('depot_products');
         const depotStockInCollections = client.db('navantis_live_stock_db').collection('depot_stock_in');
         const depotExpCollections = client.db('navantis_live_stock_db').collection('depot_expired');
+
+        /******************** Admin Section ********************/
 
         // admin purchase order API
         app.post('/purchase-order', async (req, res) => {
@@ -135,6 +138,8 @@ async function run() {
             const result = await priceUpdateCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
+
+        /******************** Warehouse Section ********************/
 
         // order stockin warehouse API
         app.post('/order-stock-wh', async (req, res) => {
@@ -516,6 +521,14 @@ async function run() {
         // get all depot request product API
         app.get('/depot-request', async(req, res) => {
             const result = await depotRequestCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
+        // delete depot request API
+        app.delete('/depot-request/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await depotRequestCollections.deleteOne(query);
             res.send(result);
         });
 
