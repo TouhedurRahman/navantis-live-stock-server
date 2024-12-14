@@ -267,10 +267,10 @@ async function run() {
         app.patch('/wh-product/:id', async (req, res) => {
             const { id } = req.params;
             const updatedProduct = req.body;
-
+        
             try {
                 const existingProducts = await whProductsCollections.find({ productName: updatedProduct.productName }).toArray();
-
+        
                 if (existingProducts.length > 0) {
                     await whProductsCollections.updateMany(
                         { productName: updatedProduct.productName },
@@ -281,23 +281,35 @@ async function run() {
                             },
                         }
                     );
+        
                     const filter = { 
                         productName: updatedProduct.productName,
                         batch: updatedProduct.batch,
-                        expire: updatedProduct.expire
+                        expire: updatedProduct.expire,
                     };
-                    const incrementQuantity = {
+        
+                    const updatedQuantity = {
                         $set: { 
-                            totalQuantity: Number(updatedProduct.totalQuantity)
+                            totalQuantity: Number(updatedProduct.totalQuantity),
                         },
                     };
-
-                    const incrementResult = await whProductsCollections.updateOne(filter, incrementQuantity);
-
+        
+                    const updatedQuantityResult = await whProductsCollections.updateOne(filter, updatedQuantity);
+        
+                    if (Number(updatedProduct.totalQuantity) === 0) {
+                        await whProductsCollections.deleteOne(filter);
+                        res.send({
+                            message: 'Product updated and deleted because total quantity is 0',
+                            priceUpdate: true,
+                            quantityUpdate: false,
+                        });
+                        return;
+                    }
+        
                     res.send({
                         message: 'Product updated successfully',
                         priceUpdate: true,
-                        quantityIncrement: incrementResult.modifiedCount > 0,
+                        quantityUpdate: updatedQuantityResult.modifiedCount > 0,
                     });
                 } else {
                     const filter = { _id: new ObjectId(id) };
@@ -315,10 +327,21 @@ async function run() {
                     };
 
                     const result = await whProductsCollections.updateOne(filter, updateOperations, options);
+        
+                    if (Number(updatedProduct.totalQuantity) === 0) {
+                        await whProductsCollections.deleteOne(filter);
+                        res.send({
+                            message: 'Product updated and deleted because total quantity is 0',
+                            priceUpdate: false,
+                            quantityUpdate: false,
+                        });
+                        return;
+                    }
+
                     res.send({
                         message: 'Product updated successfully',
                         priceUpdate: false,
-                        quantityIncrement: false,
+                        quantityUpdate: false,
                         result,
                     });
                 }
@@ -327,7 +350,7 @@ async function run() {
                 res.status(500).send({ error: 'Failed to update product' });
             }
         });
-
+        
         // get all warehouse stock-in API
         app.get('/stock-in-wh', async (req, res) => {
             const result = await whStockInCollections.find().sort({ _id: -1 }).toArray();
