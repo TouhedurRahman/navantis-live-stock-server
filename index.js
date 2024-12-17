@@ -418,15 +418,7 @@ async function run() {
                     const updatedProduct = await whStockOutCollections.updateOne(
                         { _id: existingProduct._id },
                         {
-                            $set: {
-                                actualPrice: Number(newProduct.actualPrice),
-                                tradePrice: Number(newProduct.tradePrice),
-                                remarks: newProduct.remarks,
-                            },
                             $inc: {
-                                boxQuantity: Number(newProduct.boxQuantity),
-                                productWithBox: Number(newProduct.productWithBox),
-                                productWithoutBox: Number(newProduct.productWithoutBox),
                                 totalQuantity: Number(newProduct.totalQuantity),
                             },
                         }
