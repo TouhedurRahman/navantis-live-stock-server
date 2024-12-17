@@ -565,7 +565,7 @@ async function run() {
             res.send(result);
         });
 
-        // depot receive request API
+        // add depot receive request API
         app.post('/depot-receive-req', async (req, res) => {
             const newProduct = req.body;
 
@@ -598,6 +598,12 @@ async function run() {
                 console.error('Error receive request:', error);
                 res.status(500).send({ message: 'Error receive request', error });
             }
+        });
+
+        // get all depot receive request API
+        app.get('/depot-receive-req', async(req, res) => {
+            const result = await depotReceiveReqCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
         });
 
         // add depot products API
