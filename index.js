@@ -41,6 +41,7 @@ async function run() {
         const whDamagedProductsCollections = client.db('navantis_live_stock_db').collection('damaged_products');
 
         /* depot collections */
+        const depotReceiveReqCollections = client.db('navantis_live_stock_db').collection('depot_receive');
         const depotRequestCollections = client.db('navantis_live_stock_db').collection('depot_request');
         const depotProductsCollections = client.db('navantis_live_stock_db').collection('depot_products');
         const depotStockInCollections = client.db('navantis_live_stock_db').collection('depot_stock_in');
@@ -562,6 +563,41 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const result = await depotRequestCollections.deleteOne(query);
             res.send(result);
+        });
+
+        // depot receive request API
+        app.post('/depot-receive-req', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await depotReceiveReqCollections.findOne({
+                    productName: newProduct.productName,
+                    batch: newProduct.batch,
+                    expire: newProduct.expire,
+                    date: productDate,
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await depotReceiveReqCollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            $inc: {
+                                totalQuantity: Number(newProduct.totalQuantity),
+                            },
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    newProduct.date = productDate;
+                    const result = await depotReceiveReqCollections.insertOne(newProduct);
+                    res.send({ message: 'New product added', result });
+                }
+            } catch (error) {
+                console.error('Error receive request:', error);
+                res.status(500).send({ message: 'Error receive request', error });
+            }
         });
 
         // add depot products API
