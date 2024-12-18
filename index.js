@@ -606,6 +606,14 @@ async function run() {
             res.send(result);
         });
 
+        // delete depot receive request API
+        app.delete('/depot-receive-req/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await depotReceiveReqCollections.deleteOne(query);
+            res.send(result);
+        });
+
         // add depot products API
         app.post('/depot-products', async (req, res) => {
             const newProduct = req.body;
