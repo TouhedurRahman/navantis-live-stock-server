@@ -614,71 +614,28 @@ async function run() {
             res.send(result);
         });
 
-        // add depot products API
+        // Add a new product - depot API
         app.post('/depot-products', async (req, res) => {
             const newProduct = req.body;
-        
+            const { productName, batch, expire } = newProduct;
+
             try {
                 const existingProduct = await depotProductsCollections.findOne({
-                    productName: newProduct.productName,
-                    batch: newProduct.batch,
-                    expire: newProduct.expire,
+                    productName,
+                    batch,
+                    expire,
                 });
-        
+
                 if (existingProduct) {
-                    await depotProductsCollections.updateMany(
-                        { productName: newProduct.productName },
-                        {
-                            $set: {
-                                actualPrice: Number(newProduct.actualPrice),
-                                tradePrice: Number(newProduct.tradePrice),
-                            },
-                        }
-                    );
-        
-                    const filter = {
-                        productName: newProduct.productName,
-                        batch: newProduct.batch,
-                        expire: newProduct.expire,
-                    };
-        
-                    const updatedQuantity = {
-                        $set: {
-                            totalQuantity:
-                                Number(existingProduct.totalQuantity) + Number(newProduct.totalQuantity),
-                        },
-                    };
-        
-                    const updatedQuantityResult = await depotProductsCollections.updateOne(filter, updatedQuantity);
-        
-                    res.send({
-                        message: 'Product updated successfully',
-                        priceUpdate: true,
-                        quantityUpdate: updatedQuantityResult.modifiedCount > 0,
-                    });
-                } else {
-                    const newProductData = {
-                        productName: newProduct.productName,
-                        productCode: newProduct.productCode,
-                        batch: newProduct.batch,
-                        expire: newProduct.expire,
-                        actualPrice: Number(newProduct.actualPrice),
-                        tradePrice: Number(newProduct.tradePrice),
-                        totalQuantity: Number(newProduct.totalQuantity),
-                    };
-        
-                    const result = await depotProductsCollections.insertOne(newProductData);
-        
-                    res.send({
-                        message: 'New product added successfully',
-                        priceUpdate: false,
-                        quantityUpdate: true,
-                        result,
-                    });
+                    return res
+                        .status(409)
+                        .send({ message: 'Product already exists with the same details' });
                 }
+
+                const result = await depotProductsCollections.insertOne(newProduct);
+                res.send(result);
             } catch (error) {
-                console.error('Error adding product:', error);
-                res.status(500).send({ error: 'Failed to add product' });
+                res.status(500).send({ message: 'Error adding product', error });
             }
         });
 
