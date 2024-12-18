@@ -617,27 +617,68 @@ async function run() {
         // add depot products API
         app.post('/depot-products', async (req, res) => {
             const newProduct = req.body;
-
+        
             try {
                 const existingProduct = await depotProductsCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                 });
-
+        
                 if (existingProduct) {
-                    const updatedProduct = await depotProductsCollections.updateOne(
-                        { _id: existingProduct._id },
-                        { $inc: { totalQuantity: Number(newProduct.totalQuantity) } }
+                    await depotProductsCollections.updateMany(
+                        { productName: newProduct.productName },
+                        {
+                            $set: {
+                                actualPrice: Number(newProduct.actualPrice),
+                                tradePrice: Number(newProduct.tradePrice),
+                            },
+                        }
                     );
-                    res.send({ message: 'Product quantity updated', updatedProduct });
+        
+                    const filter = {
+                        productName: newProduct.productName,
+                        batch: newProduct.batch,
+                        expire: newProduct.expire,
+                    };
+        
+                    const updatedQuantity = {
+                        $set: {
+                            totalQuantity:
+                                Number(existingProduct.totalQuantity) + Number(newProduct.totalQuantity),
+                        },
+                    };
+        
+                    const updatedQuantityResult = await depotProductsCollections.updateOne(filter, updatedQuantity);
+        
+                    res.send({
+                        message: 'Product updated successfully',
+                        priceUpdate: true,
+                        quantityUpdate: updatedQuantityResult.modifiedCount > 0,
+                    });
                 } else {
-                    const result = await depotProductsCollections.insertOne(newProduct);
-                    res.send({ message: 'Depot new product added', result });
+                    const newProductData = {
+                        productName: newProduct.productName,
+                        productCode: newProduct.productCode,
+                        batch: newProduct.batch,
+                        expire: newProduct.expire,
+                        actualPrice: Number(newProduct.actualPrice),
+                        tradePrice: Number(newProduct.tradePrice),
+                        totalQuantity: Number(newProduct.totalQuantity),
+                    };
+        
+                    const result = await depotProductsCollections.insertOne(newProductData);
+        
+                    res.send({
+                        message: 'New product added successfully',
+                        priceUpdate: false,
+                        quantityUpdate: true,
+                        result,
+                    });
                 }
             } catch (error) {
-                console.error('Error add depot:', error);
-                res.status(500).send({ message: 'Error add depot', error });
+                console.error('Error adding product:', error);
+                res.status(500).send({ error: 'Failed to add product' });
             }
         });
 
