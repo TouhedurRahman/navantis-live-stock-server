@@ -617,8 +617,7 @@ async function run() {
         // Add a new product - depot API
         app.post('/depot-products', async (req, res) => {
             const newProduct = req.body;
-            console.log(newProduct);
-        
+                    
             try {
                 const priceUpdateResult = await depotProductsCollections.updateMany(
                     { productName: newProduct.productName },
