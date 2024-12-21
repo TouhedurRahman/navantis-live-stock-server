@@ -617,120 +617,60 @@ async function run() {
         // Add a new product - depot API
         app.post('/depot-products', async (req, res) => {
             const newProduct = req.body;
-            const { productName, batch, expire } = newProduct;
-
+            console.log(newProduct);
+        
             try {
-                const existingProduct = await depotProductsCollections.findOne({
-                    productName,
-                    batch,
-                    expire,
-                });
-
+                const priceUpdateResult = await depotProductsCollections.updateMany(
+                    { productName: newProduct.productName },
+                    {
+                        $set: {
+                            actualPrice: Number(newProduct.actualPrice),
+                            tradePrice: Number(newProduct.tradePrice),
+                        },
+                    }
+                );
+        
+                const quantityFilter = {
+                    productName: newProduct.productName,
+                    batch: newProduct.batch,
+                    expire: newProduct.expire,
+                };
+        
+                const existingProduct = await depotProductsCollections.findOne(quantityFilter);
+        
                 if (existingProduct) {
-                    return res
-                        .status(409)
-                        .send({ message: 'Product already exists with the same details' });
+                    const updatedQuantity = {
+                        $inc: {
+                            totalQuantity: Number(newProduct.totalQuantity),
+                        },
+                    };
+        
+                    const quantityUpdateResult = await depotProductsCollections.updateOne(
+                        quantityFilter,
+                        updatedQuantity
+                    );
+        
+                    res.send({
+                        message: 'Product updated successfully',
+                        priceUpdate: priceUpdateResult.modifiedCount > 0,
+                        quantityUpdate: quantityUpdateResult.modifiedCount > 0,
+                    });
+                } else {
+                    const insertResult = await depotProductsCollections.insertOne(newProduct);
+                    res.send({
+                        message: 'New product added successfully',
+                        insertedId: insertResult.insertedId,
+                    });
                 }
-
-                const result = await depotProductsCollections.insertOne(newProduct);
-                res.send(result);
             } catch (error) {
-                res.status(500).send({ message: 'Error adding product', error });
+                res.status(500).send({ message: 'Error adding or updating product', error });
             }
-        });
+        });       
 
         // get all depot products API
         app.get('/depot-products', async (req, res) => {
             const result = await depotProductsCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
-        });
-
-        // update depot products API
-        app.patch('/depot-product/:id', async (req, res) => {
-            const { id } = req.params;
-            const updatedProduct = req.body;
-        
-            try {
-                const existingProducts = await depotProductsCollections.find({ productName: updatedProduct.productName }).toArray();
-        
-                if (existingProducts.length > 0) {
-                    await depotProductsCollections.updateMany(
-                        { productName: updatedProduct.productName },
-                        {
-                            $set: {
-                                actualPrice: Number(updatedProduct.actualPrice),
-                                tradePrice: Number(updatedProduct.tradePrice),
-                            },
-                        }
-                    );
-        
-                    const filter = { 
-                        productName: updatedProduct.productName,
-                        batch: updatedProduct.batch,
-                        expire: updatedProduct.expire,
-                    };
-        
-                    const updatedQuantity = {
-                        $set: { 
-                            totalQuantity: Number(updatedProduct.totalQuantity),
-                        },
-                    };
-        
-                    const updatedQuantityResult = await depotProductsCollections.updateOne(filter, updatedQuantity);
-        
-                    if (Number(updatedProduct.totalQuantity) === 0) {
-                        await depotProductsCollections.deleteOne(filter);
-                        res.send({
-                            message: 'Product updated and deleted because total quantity is 0',
-                            priceUpdate: true,
-                            quantityUpdate: false,
-                        });
-                        return;
-                    }
-        
-                    res.send({
-                        message: 'Product updated successfully',
-                        priceUpdate: true,
-                        quantityUpdate: updatedQuantityResult.modifiedCount > 0,
-                    });
-                } else {
-                    const filter = { _id: new ObjectId(id) };
-                    const options = { upsert: true };
-                    const updateOperations = {
-                        $set: {
-                            productName: updatedProduct.productName,
-                            productCode: updatedProduct.productCode,
-                            batch: updatedProduct.batch,
-                            expire: updatedProduct.expire,
-                            actualPrice: Number(updatedProduct.actualPrice),
-                            tradePrice: Number(updatedProduct.tradePrice),
-                            totalQuantity: Number(updatedProduct.totalQuantity),
-                        },
-                    };
-
-                    const result = await depotProductsCollections.updateOne(filter, updateOperations, options);
-        
-                    if (Number(updatedProduct.totalQuantity) === 0) {
-                        await depotProductsCollections.deleteOne(filter);
-                        res.send({
-                            message: 'Product updated and deleted because total quantity is 0',
-                            priceUpdate: false,
-                            quantityUpdate: false,
-                        });
-                        return;
-                    }
-
-                    res.send({
-                        message: 'Product updated successfully',
-                        priceUpdate: false,
-                        quantityUpdate: false,
-                        result,
-                    });
-                }
-            } catch (error) {
-                console.error('Error updating product:', error);
-                res.status(500).send({ error: 'Failed to update product' });
-            }
         });
 
         // delete depot expired product API
