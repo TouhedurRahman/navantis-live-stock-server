@@ -617,7 +617,7 @@ async function run() {
         // Add a new product - depot API
         app.post('/depot-products', async (req, res) => {
             const newProduct = req.body;
-                    
+
             try {
                 const priceUpdateResult = await depotProductsCollections.updateMany(
                     { productName: newProduct.productName },
@@ -691,6 +691,7 @@ async function run() {
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
+                    status: "pending",
                     // date: productDate,
                 });
 
@@ -698,9 +699,9 @@ async function run() {
                     const updatedProduct = await depotExpCollections.updateOne(
                         { _id: existingProduct._id },
                         {
-                            /* $set: {
-                                remarks: newProduct.remarks,
-                            }, */
+                            $set: {
+                                status: newProduct.status,
+                            },
                             $inc: {
                                 totalQuantity: Number(newProduct.totalQuantity),
                             },
@@ -721,6 +722,14 @@ async function run() {
         // get all depot expired product API
         app.get('/expired-in-depot', async (req, res) => {
             const result = await depotExpCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
+        // delete depot expired request API
+        app.delete('/expired-in-depot/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await depotExpCollections.deleteOne(query);
             res.send(result);
         });
 
