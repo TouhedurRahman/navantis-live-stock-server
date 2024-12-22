@@ -45,7 +45,7 @@ async function run() {
         const depotRequestCollections = client.db('navantis_live_stock_db').collection('depot_request');
         const depotProductsCollections = client.db('navantis_live_stock_db').collection('depot_products');
         const depotStockInCollections = client.db('navantis_live_stock_db').collection('depot_stock_in');
-        const depotExpCollections = client.db('navantis_live_stock_db').collection('depot_expired');
+        const depotExpReqCollections = client.db('navantis_live_stock_db').collection('expire_request');
 
         /******************** Admin Section ********************/
 
@@ -681,13 +681,13 @@ async function run() {
         });
 
         // depot expired-product API
-        app.post('/expired-in-depot', async (req, res) => {
+        app.post('/expire-request', async (req, res) => {
             const newProduct = req.body;
 
             try {
                 const productDate = newProduct.date || new Date().toISOString().split('T')[0];
 
-                const existingProduct = await depotExpCollections.findOne({
+                const existingProduct = await depotExpReqCollections.findOne({
                     productName: newProduct.productName,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
@@ -696,7 +696,7 @@ async function run() {
                 });
 
                 if (existingProduct) {
-                    const updatedProduct = await depotExpCollections.updateOne(
+                    const updatedProduct = await depotExpReqCollections.updateOne(
                         { _id: existingProduct._id },
                         {
                             $set: {
@@ -710,7 +710,7 @@ async function run() {
                     res.send({ message: 'Product quantity updated', updatedProduct });
                 } else {
                     // newProduct.date = productDate;
-                    const result = await depotExpCollections.insertOne(newProduct);
+                    const result = await depotExpReqCollections.insertOne(newProduct);
                     res.send({ message: 'Damaged product added', result });
                 }
             } catch (error) {
@@ -720,16 +720,16 @@ async function run() {
         });
 
         // get all depot expired product API
-        app.get('/expired-in-depot', async (req, res) => {
-            const result = await depotExpCollections.find().sort({ _id: -1 }).toArray();
+        app.get('/expire-request', async (req, res) => {
+            const result = await depotExpReqCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
         // delete depot expired request API
-        app.delete('/expired-in-depot/:id', async (req, res) => {
+        app.delete('/expire-request/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
-            const result = await depotExpCollections.deleteOne(query);
+            const result = await depotExpReqCollections.deleteOne(query);
             res.send(result);
         });
 
