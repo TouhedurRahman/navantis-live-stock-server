@@ -763,6 +763,12 @@ async function run() {
             }
         });
 
+        // get all depot expired product API
+        app.get('/depot-expired', async (req, res) => {
+            const result = await depotExpiredCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         // Depot stock-in API
         app.post('/stock-in-depot', async (req, res) => {
             const newProduct = req.body;
