@@ -29,6 +29,9 @@ async function run() {
 
         /******************** Database collections ********************/
 
+        /* user collections */
+        const usersCollection = client.db('navantis_live_stock_db').collection('users');
+
         /* admin collections */
         const adminPuchaseCollections = client.db('navantis_live_stock_db').collection('order_list');
         const priceUpdateCollections = client.db('navantis_live_stock_db').collection('price_update');
@@ -47,6 +50,20 @@ async function run() {
         const depotStockInCollections = client.db('navantis_live_stock_db').collection('depot_stock_in');
         const depotExpReqCollections = client.db('navantis_live_stock_db').collection('expire_request');
         const depotExpiredCollections = client.db('navantis_live_stock_db').collection('depot_expired');
+
+        /******************** Admin Section ********************/
+
+        // send user(s) data API
+		app.post('/users', async (req, res) => {
+			const user = req.body;
+			const query = { email: user.email };
+			const existingUser = await usersCollection.findOne(query);
+			if (existingUser) {
+				return res.send({ message: "User already exists" })
+			}
+			const result = await usersCollection.insertOne(user);
+			res.send(result);
+		});
 
         /******************** Admin Section ********************/
 
