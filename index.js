@@ -48,6 +48,7 @@ async function run() {
         const depotRequestCollections = client.db('navantis_live_stock_db').collection('depot_request');
         const depotProductsCollections = client.db('navantis_live_stock_db').collection('depot_products');
         const depotStockInCollections = client.db('navantis_live_stock_db').collection('depot_stock_in');
+        const depotStockOutCollections = client.db('navantis_live_stock_db').collection('depot_stock_out');
         const depotExpReqCollections = client.db('navantis_live_stock_db').collection('expire_request');
         const depotExpiredCollections = client.db('navantis_live_stock_db').collection('depot_expired');
 
@@ -821,6 +822,41 @@ async function run() {
         app.get('/stock-in-depot', async (req, res) => {
             const result = await depotStockInCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
+        });
+
+        // depot stock-out API
+        app.post('/stock-out-depot', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await depotStockOutCollections.findOne({
+                    productName: newProduct.productName,
+                    batch: newProduct.batch,
+                    expire: newProduct.expire,
+                    date: productDate,
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await depotStockOutCollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            $inc: {
+                                totalQuantity: Number(newProduct.totalQuantity),
+                            },
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    newProduct.date = productDate;
+                    const result = await depotStockOutCollections.insertOne(newProduct);
+                    res.send({ message: 'New product added', result });
+                }
+            } catch (error) {
+                console.error('Error processing stock-in:', error);
+                res.status(500).send({ message: 'Error processing stock-in', error });
+            }
         });
 
         // Send a ping to confirm a successful connection
