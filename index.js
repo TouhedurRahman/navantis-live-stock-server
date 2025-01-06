@@ -35,6 +35,7 @@ async function run() {
         /* admin collections */
         const adminPuchaseCollections = client.db('navantis_live_stock_db').collection('order_list');
         const priceUpdateCollections = client.db('navantis_live_stock_db').collection('price_update');
+        const damagedAndExpiredCollections = client.db('navantis_live_stock_db').collection('damaged_expired');
 
         /* warehouse collections */
         const orderStockCollections = client.db('navantis_live_stock_db').collection('order_stock_wh');
@@ -157,6 +158,42 @@ async function run() {
         app.get('/price-update', async (req, res) => {
             const result = await priceUpdateCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
+        });
+
+        // damaged and expired API
+        app.post('/damaged-expired', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await damagedAndExpiredCollections.findOne({
+                    productName: newProduct.productName,
+                    batch: newProduct.batch,
+                    expire: newProduct.expire,
+                    status: newProduct.status,
+                    date: productDate,
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await damagedAndExpiredCollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            $inc: {
+                                totalQuantity: Number(newProduct.totalQuantity),
+                            },
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    newProduct.date = productDate;
+                    const result = await damagedAndExpiredCollections.insertOne(newProduct);
+                    res.send({ message: 'New product added', result });
+                }
+            } catch (error) {
+                console.error('Error processing stock-in:', error);
+                res.status(500).send({ message: 'Error processing damaged & expired', error });
+            }
         });
 
         /******************** Warehouse Section ********************/
