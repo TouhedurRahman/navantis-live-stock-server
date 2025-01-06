@@ -196,6 +196,12 @@ async function run() {
             }
         });
 
+        // get all damaged and expired API
+        app.get('/damaged-expired', async (req, res) => {
+            const result = await damagedAndExpiredCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         /******************** Warehouse Section ********************/
 
         // order stockin warehouse API
