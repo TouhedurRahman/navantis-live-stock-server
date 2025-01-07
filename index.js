@@ -53,7 +53,7 @@ async function run() {
         const depotExpReqCollections = client.db('navantis_live_stock_db').collection('expire_request');
         const depotExpiredCollections = client.db('navantis_live_stock_db').collection('depot_expired');
 
-        /******************** Admin Section ********************/
+        /******************** User(s) Section ********************/
 
         // send user(s) data API
 		app.post('/users', async (req, res) => {
@@ -66,6 +66,12 @@ async function run() {
 			const result = await usersCollection.insertOne(user);
 			res.send(result);
 		});
+
+        // get all user(s) API
+        app.get('/users', async(req, res) => {
+            const result = await usersCollection.find().toArray();
+            res.send(result);
+        });
 
         /******************** Admin Section ********************/
 
