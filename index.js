@@ -73,6 +73,14 @@ async function run() {
             res.send(result);
         });
 
+        // get single user(s) api
+		app.get('/user/:email', async (req, res) => {
+			const email = req.params.email;
+			const query = { email: email }
+			const result = await usersCollection.findOne(query);
+			res.send(result);
+		});
+
         /******************** Admin Section ********************/
 
         // admin purchase order API
