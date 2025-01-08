@@ -81,6 +81,25 @@ async function run() {
 			res.send(result);
 		});
 
+        // update user(s) profile API
+		app.patch('/user/:email', async (req, res) => {
+			const email = req.params.email;
+			const filter = { email: email };
+			const updatedUser = req.body;
+			const options = { upsert: true };
+			const updatedDoc = {
+				$set: {
+					...updatedUser,
+				}
+			}
+			const result = await usersCollection.updateOne(
+				filter,
+				updatedDoc,
+				options
+			);
+			res.send(result);
+		});
+
         /******************** Admin Section ********************/
 
         // admin purchase order API
