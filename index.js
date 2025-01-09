@@ -81,6 +81,20 @@ async function run() {
 			res.send(result);
 		});
 
+        // update user's designation API
+		app.patch('/users/admin/:id', async (req, res) => {
+			const id = req.params.id;
+			const filter = { _id: new ObjectId(id) }
+            const updatedDesignation = req.body;
+			const updateDoc = {
+				$set: {
+					designation: updatedDesignation.designation
+				},
+			};
+			const result = await usersCollection.updateOne(filter, updateDoc);
+			res.send(result);
+		});
+
         // update user(s) profile API
 		app.patch('/user/:email', async (req, res) => {
 			const email = req.params.email;
