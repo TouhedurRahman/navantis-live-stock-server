@@ -1047,9 +1047,9 @@ async function run() {
                 console.error('Error updating or creating order:', error);
                 res.status(500).send({ message: 'Error updating or creating order', error });
             }
-        });                        
+        });
 
-        // get all depot stock-out API
+        // get all ordera API
         app.get('/orders', async (req, res) => {
             const result = await orderCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
