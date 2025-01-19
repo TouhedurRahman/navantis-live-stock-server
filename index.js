@@ -53,6 +53,9 @@ async function run() {
         const depotExpReqCollections = client.db('navantis_live_stock_db').collection('expire_request');
         const depotExpiredCollections = client.db('navantis_live_stock_db').collection('depot_expired');
 
+        /* order collections */
+        const orderCollections = client.db('navantis_live_stock_db').collection('orders');
+
         /******************** User(s) Section ********************/
 
         // send user(s) data API
@@ -952,6 +955,103 @@ async function run() {
         // get all depot stock-out API
         app.get('/stock-out-depot', async (req, res) => {
             const result = await depotStockOutCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
+        /******************** Depot Section ********************/
+
+        // add a new order API
+        app.post('/orders', async (req, res) => {
+            const newOrder = req.body;
+        
+            try {
+                const productDate = newOrder.date || new Date().toISOString().split('T')[0];
+        
+                // Check if an existing order for this customer, pharmacy, and date exists
+                const existingOrder = await orderCollections.findOne({
+                    email: newOrder.email,
+                    pharmacy: newOrder.pharmacy,
+                    date: productDate,
+                    status: "initialized"
+                });
+        
+                if (existingOrder) {
+                    // Ensure `totalUnit` and `totalPrice` are initialized in the existing document
+                    const updateFields = {
+                        totalUnit: existingOrder.totalUnit || 0,
+                        totalPrice: existingOrder.totalPrice || 0
+                    };
+        
+                    // Check if the product already exists in the products array
+                    const productExists = existingOrder.products.find(p => p.id === newOrder.productId);
+        
+                    if (productExists) {
+                        // Update quantity and total price for the existing product
+                        const updatedOrder = await orderCollections.updateOne(
+                            { _id: existingOrder._id, "products.id": newOrder.productId },
+                            {
+                                $inc: {
+                                    "products.$.quantity": newOrder.quantity, // Increment quantity
+                                    totalUnit: newOrder.quantity, // Increment total units
+                                    totalPrice: newOrder.quantity * newOrder.tradePrice // Increment total price
+                                }
+                            }
+                        );
+        
+                        res.send({ message: "Product quantity updated successfully", updatedOrder });
+                    } else {
+                        // If the product does not exist, add it to the products array
+                        const updatedOrder = await orderCollections.updateOne(
+                            { _id: existingOrder._id },
+                            {
+                                $push: {
+                                    products: {
+                                        id: newOrder.productId,
+                                        name: newOrder.productName,
+                                        quantity: newOrder.quantity,
+                                        tradePrice: newOrder.tradePrice
+                                    }
+                                },
+                                $inc: {
+                                    totalUnit: newOrder.quantity, // Increment total units
+                                    totalPrice: newOrder.quantity * newOrder.tradePrice // Increment total price
+                                }
+                            }
+                        );
+        
+                        res.send({ message: "New product added to the existing order", updatedOrder });
+                    }
+                } else {
+                    // If no order exists, create a new order with initialized fields
+                    const newOrderDocument = {
+                        email: newOrder.email,
+                        pharmacy: newOrder.pharmacy,
+                        date: productDate,
+                        status: "initialized",
+                        totalUnit: newOrder.quantity || 0,
+                        totalPrice: (newOrder.quantity || 0) * (newOrder.tradePrice || 0),
+                        products: [
+                            {
+                                id: newOrder.productId,
+                                name: newOrder.productName,
+                                quantity: newOrder.quantity,
+                                tradePrice: newOrder.tradePrice
+                            }
+                        ]
+                    };
+        
+                    const result = await orderCollections.insertOne(newOrderDocument);
+                    res.send({ message: "New order created successfully", result });
+                }
+            } catch (error) {
+                console.error('Error updating or creating order:', error);
+                res.status(500).send({ message: 'Error updating or creating order', error });
+            }
+        });                        
+
+        // get all depot stock-out API
+        app.get('/orders', async (req, res) => {
+            const result = await orderCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
