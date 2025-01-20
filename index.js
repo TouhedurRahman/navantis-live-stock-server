@@ -963,6 +963,10 @@ async function run() {
         // add a new order API
         app.post('/orders', async (req, res) => {
             const newOrder = req.body;
+            const result = await orderCollections.insertOne(newOrder);
+			res.send(result);
+
+            /* const newOrder = req.body;
         
             try {
                 const productDate = newOrder.date || new Date().toISOString().split('T')[0];
@@ -1046,7 +1050,7 @@ async function run() {
             } catch (error) {
                 console.error('Error updating or creating order:', error);
                 res.status(500).send({ message: 'Error updating or creating order', error });
-            }
+            } */
         });
 
         // get all ordera API
