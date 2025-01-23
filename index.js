@@ -958,104 +958,53 @@ async function run() {
             res.send(result);
         });
 
-        /******************** Depot Section ********************/
+        /******************** Order Section ********************/
 
         // add a new order API
         app.post('/orders', async (req, res) => {
-            const newOrder = req.body;
-            const result = await orderCollections.insertOne(newOrder);
-			res.send(result);
-
-            /* const newOrder = req.body;
-        
             try {
-                const productDate = newOrder.date || new Date().toISOString().split('T')[0];
+                const newOrder = req.body;
+
+                if (newOrder.status && newOrder.status.toLowerCase() !== 'pending') {
+                    const today = new Date();
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const year = today.getFullYear();
+                    const formattedDate = `${day}${month}${year}`;
+
+                    const latestOrder = await orderCollections
+                        .findOne({ invoice: { $regex: `^NPL${formattedDate}` } }, { sort: { invoice: -1 } });
         
-                // Check if an existing order for this customer, pharmacy, and date exists
-                const existingOrder = await orderCollections.findOne({
-                    email: newOrder.email,
-                    pharmacy: newOrder.pharmacy,
-                    date: productDate,
-                    status: "initialized"
-                });
-        
-                if (existingOrder) {
-                    // Ensure `totalUnit` and `totalPrice` are initialized in the existing document
-                    const updateFields = {
-                        totalUnit: existingOrder.totalUnit || 0,
-                        totalPrice: existingOrder.totalPrice || 0
-                    };
-        
-                    // Check if the product already exists in the products array
-                    const productExists = existingOrder.products.find(p => p.id === newOrder.productId);
-        
-                    if (productExists) {
-                        // Update quantity and total price for the existing product
-                        const updatedOrder = await orderCollections.updateOne(
-                            { _id: existingOrder._id, "products.id": newOrder.productId },
-                            {
-                                $inc: {
-                                    "products.$.quantity": newOrder.quantity, // Increment quantity
-                                    totalUnit: newOrder.quantity, // Increment total units
-                                    totalPrice: newOrder.quantity * newOrder.tradePrice // Increment total price
-                                }
-                            }
-                        );
-        
-                        res.send({ message: "Product quantity updated successfully", updatedOrder });
-                    } else {
-                        // If the product does not exist, add it to the products array
-                        const updatedOrder = await orderCollections.updateOne(
-                            { _id: existingOrder._id },
-                            {
-                                $push: {
-                                    products: {
-                                        id: newOrder.productId,
-                                        name: newOrder.productName,
-                                        quantity: newOrder.quantity,
-                                        tradePrice: newOrder.tradePrice
-                                    }
-                                },
-                                $inc: {
-                                    totalUnit: newOrder.quantity, // Increment total units
-                                    totalPrice: newOrder.quantity * newOrder.tradePrice // Increment total price
-                                }
-                            }
-                        );
-        
-                        res.send({ message: "New product added to the existing order", updatedOrder });
+                    let serialNumber = 1;
+                    if (latestOrder) {
+                        const latestInvoice = latestOrder.invoice;
+                        serialNumber = parseInt(latestInvoice.slice(-6)) + 1;
                     }
-                } else {
-                    // If no order exists, create a new order with initialized fields
-                    const newOrderDocument = {
-                        email: newOrder.email,
-                        pharmacy: newOrder.pharmacy,
-                        date: productDate,
-                        status: "initialized",
-                        totalUnit: newOrder.quantity || 0,
-                        totalPrice: (newOrder.quantity || 0) * (newOrder.tradePrice || 0),
-                        products: [
-                            {
-                                id: newOrder.productId,
-                                name: newOrder.productName,
-                                quantity: newOrder.quantity,
-                                tradePrice: newOrder.tradePrice
-                            }
-                        ]
-                    };
-        
-                    const result = await orderCollections.insertOne(newOrderDocument);
-                    res.send({ message: "New order created successfully", result });
+
+                    const invoice = `NPL${formattedDate}INV${serialNumber.toString().padStart(6, '0')}`;
+
+                    newOrder.invoice = invoice;
                 }
+
+                const result = await orderCollections.insertOne(newOrder);
+                res.send(result);
             } catch (error) {
-                console.error('Error updating or creating order:', error);
-                res.status(500).send({ message: 'Error updating or creating order', error });
-            } */
+                console.error('Error creating order:', error);
+                res.status(500).send({ message: 'Failed to create order', error });
+            }
         });
 
-        // get all ordera API
+        // get all order(s) API
         app.get('/orders', async (req, res) => {
             const result = await orderCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
+        // delete pending order(s) API
+        app.delete('/pending-order/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await orderCollections.deleteOne(query);
             res.send(result);
         });
 
