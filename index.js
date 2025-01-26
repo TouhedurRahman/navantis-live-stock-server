@@ -784,6 +784,84 @@ async function run() {
             res.send(result);
         });
 
+        // update depot product API
+        app.patch('/depot-product/:id', async (req, res) => {
+            const { id } = req.params;
+            const updatedProduct = req.body;
+        
+            try {
+                const existingProducts = await depotProductsCollections.find({ productName: updatedProduct.productName }).toArray();
+        
+                if (existingProducts.length > 0) {
+                    const filter = { 
+                        productName: updatedProduct.productName,
+                        batch: updatedProduct.batch,
+                        expire: updatedProduct.expire,
+                    };
+        
+                    const updatedQuantity = {
+                        $set: { 
+                            totalQuantity: Number(updatedProduct.totalQuantity),
+                        },
+                    };
+        
+                    const updatedQuantityResult = await depotProductsCollections.updateOne(filter, updatedQuantity);
+        
+                    if (Number(updatedProduct.totalQuantity) === 0) {
+                        await depotProductsCollections.deleteOne(filter);
+                        res.send({
+                            message: 'Product updated and deleted because total quantity is 0',
+                            priceUpdate: true,
+                            quantityUpdate: false,
+                        });
+                        return;
+                    }
+        
+                    res.send({
+                        message: 'Product updated successfully',
+                        priceUpdate: true,
+                        quantityUpdate: updatedQuantityResult.modifiedCount > 0,
+                    });
+                } else {
+                    const filter = { _id: new ObjectId(id) };
+                    const options = { upsert: true };
+                    const updateOperations = {
+                        $set: {
+                            productName: updatedProduct.productName,
+                            productCode: updatedProduct.productCode,
+                            batch: updatedProduct.batch,
+                            expire: updatedProduct.expire,
+                            actualPrice: Number(updatedProduct.actualPrice),
+                            tradePrice: Number(updatedProduct.tradePrice),
+                            totalQuantity: Number(updatedProduct.totalQuantity),
+                        },
+                    };
+
+                    const result = await depotProductsCollections.updateOne(filter, updateOperations, options);
+        
+                    if (Number(updatedProduct.totalQuantity) === 0) {
+                        await depotProductsCollections.deleteOne(filter);
+                        res.send({
+                            message: 'Product updated and deleted because total quantity is 0',
+                            priceUpdate: false,
+                            quantityUpdate: false,
+                        });
+                        return;
+                    }
+
+                    res.send({
+                        message: 'Product updated successfully',
+                        priceUpdate: false,
+                        quantityUpdate: false,
+                        result,
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating product:', error);
+                res.status(500).send({ error: 'Failed to update product' });
+            }
+        });
+
         // delete depot expired product API
         app.delete('/depot-product/:id', async (req, res) => {
             const id = req.params.id;
