@@ -793,6 +793,16 @@ async function run() {
                 const existingProducts = await depotProductsCollections.find({ productName: updatedProduct.productName }).toArray();
         
                 if (existingProducts.length > 0) {
+                    await depotProductsCollections.updateMany(
+                        { productName: updatedProduct.productName },
+                        {
+                            $set: {
+                                actualPrice: Number(updatedProduct.actualPrice),
+                                tradePrice: Number(updatedProduct.tradePrice),
+                            },
+                        }
+                    );
+        
                     const filter = { 
                         productName: updatedProduct.productName,
                         batch: updatedProduct.batch,
