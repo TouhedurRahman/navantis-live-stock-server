@@ -1082,6 +1082,20 @@ async function run() {
             }
         });
 
+        // update order API
+		app.patch('/order/:id', async (req, res) => {
+			const id = req.params.id;
+			const filter = { _id: new ObjectId(id) }
+            const updatedOrder = req.body;
+			const updateDoc = {
+				$set: {
+					...updatedOrder
+				},
+			};
+			const result = await orderCollections.updateOne(filter, updateDoc);
+			res.send(result);
+		});
+
         // get all order(s) API
         app.get('/orders', async (req, res) => {
             const result = await orderCollections.find().sort({ _id: -1 }).toArray();
