@@ -1073,6 +1073,8 @@ async function run() {
 
                     newOrder.invoice = invoice;
                 }
+                
+                delete newOrder._id;
 
                 const result = await orderCollections.insertOne(newOrder);
                 res.send(result);
