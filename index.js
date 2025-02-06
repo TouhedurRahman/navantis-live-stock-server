@@ -56,6 +56,9 @@ async function run() {
         /* order collections */
         const orderCollections = client.db('navantis_live_stock_db').collection('orders');
 
+        /* order collections */
+        const paymentCollections = client.db('navantis_live_stock_db').collection('payments');
+
         /******************** User(s) Section ********************/
 
         // send user(s) data API
@@ -1110,6 +1113,48 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const result = await orderCollections.deleteOne(query);
             res.send(result);
+        });
+
+        /******************** Payment Section ********************/
+        // add new payment API
+        app.post('/payments', async (req, res) => {
+            const newPayment = req.body;
+          
+            try {
+              const paidDate = newPayment.paidDate || new Date().toISOString().split('T')[0];
+          
+              const existingProduct = await paymentCollections.findOne({
+                invoice: newPayment.invoice,
+                paidDate: paidDate,
+              });
+          
+              if (existingProduct) {
+                const updatedPaid = parseFloat(existingProduct.paid) + parseFloat(newPayment.paymentAmount);
+                const updatedDue = parseFloat((existingProduct.totalPayable - updatedPaid).toFixed(2));
+          
+                const updatedProduct = await paymentCollections.updateOne(
+                  { _id: existingProduct._id },
+                  {
+                    $set: {
+                      paid: updatedPaid,
+                      due: updatedDue,
+                      status: updatedDue === 0 ? 'paid' : 'due',
+                    },
+                  }
+                );
+          
+                res.send({ message: 'Payment updated successfully', updatedProduct });
+              } else {
+                newPayment.paidDate = paidDate;
+                delete newPayment.paymentAmount;
+
+                const result = await paymentCollections.insertOne(newPayment);
+                res.send({ message: 'New payment record added', result });
+              }
+            } catch (error) {
+              console.error('Error processing payment:', error);
+              res.status(500).send({ message: 'Error processing payment', error });
+            }
         });
 
         // Send a ping to confirm a successful connection
