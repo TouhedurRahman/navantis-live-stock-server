@@ -1157,6 +1157,12 @@ async function run() {
             }
         });
 
+        // get all payment(s) API
+        app.get('/payments', async (req, res) => {
+            const result = await paymentCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         // Send a ping to confirm a successful connection
         await client.db('admin').command({ ping: 1 });
         console.log("Pinged your deployment. You're successfully connected to MongoDB!");
