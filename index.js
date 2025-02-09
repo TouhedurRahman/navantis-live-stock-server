@@ -59,6 +59,9 @@ async function run() {
         /* order collections */
         const paymentCollections = client.db('navantis_live_stock_db').collection('payments');
 
+        /* return collections */
+        const returnCollections = client.db('navantis_live_stock_db').collection('returns');
+
         /******************** User(s) Section ********************/
 
         // send user(s) data API
@@ -1155,6 +1158,20 @@ async function run() {
               console.error('Error processing payment:', error);
               res.status(500).send({ message: 'Error processing payment', error });
             }
+        });
+
+        /******************** Return Section ********************/
+        // send return(s) data API
+		app.post('/returns', async (req, res) => {
+			const newReturn = req.body;
+			const result = await returnCollections.insertOne(newReturn);
+			res.send(result);
+		});
+
+        // get all return(s) API
+        app.get('/returns', async(req, res) => {
+            const result = await returnCollections.find().toArray();
+            res.send(result);
         });
 
         // get all payment(s) API
