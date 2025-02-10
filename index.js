@@ -1140,6 +1140,7 @@ async function run() {
                   {
                     $set: {
                       paid: updatedPaid,
+                      totalPayable: newPayment.totalPayable,
                       due: updatedDue,
                       status: updatedDue === 0 ? 'paid' : 'due',
                       deliveryMan: newPayment.deliveryMan,
