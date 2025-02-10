@@ -1142,6 +1142,7 @@ async function run() {
                       paid: updatedPaid,
                       due: updatedDue,
                       status: updatedDue === 0 ? 'paid' : 'due',
+                      deliveryMan: newPayment.deliveryMan,
                     },
                   }
                 );
