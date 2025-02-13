@@ -66,7 +66,6 @@ async function run() {
         const returnCollections = client.db('navantis_live_stock_db').collection('returns');
 
         /******************** User(s) Section ********************/
-
         // send user(s) data API
 		app.post('/users', async (req, res) => {
 			const user = req.body;
@@ -127,7 +126,7 @@ async function run() {
 		});
 
         /******************** Customer(s) Section ********************/
-        // add a new customer API
+        // add a new customer(s) API
         app.post('/customers', async(req, res) => {
             try {
                 const newCustomer = req.body;
@@ -160,6 +159,12 @@ async function run() {
                 console.error('Error creating customer:', error);
                 res.status(500).send({ message: 'Failed to create customer', error });
             }
+        });
+
+        // get all customer(s) API
+        app.get('/customers', async (req, res) => {
+            const result = await customerCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
         });
 
         /******************** Admin Section ********************/
