@@ -32,6 +32,9 @@ async function run() {
         /* user collections */
         const usersCollection = client.db('navantis_live_stock_db').collection('users');
 
+        /* customer collections */
+        const customerCollections = client.db('navantis_live_stock_db').collection('customers');
+
         /* admin collections */
         const adminPuchaseCollections = client.db('navantis_live_stock_db').collection('order_list');
         const priceUpdateCollections = client.db('navantis_live_stock_db').collection('price_update');
@@ -123,8 +126,43 @@ async function run() {
 			res.send(result);
 		});
 
-        /******************** Admin Section ********************/
+        /******************** Customer(s) Section ********************/
+        // add a new customer API
+        app.post('/customers', async(req, res) => {
+            try {
+                const newCustomer = req.body;
 
+                const existingCustomer = await customerCollections.findOne({
+                    customerName: newCustomer.customerName
+                });
+
+                if (!existingCustomer) {
+                    const latestCustomer = await customerCollections
+                        .findOne({ customerId: { $regex: `^PHAR` } }, { sort: { customerId: -1 } });
+        
+                    let serialNumber = 1;
+                    if (latestCustomer) {
+                        const latestCustomerId = latestCustomer.customerId;
+                        serialNumber = parseInt(latestCustomerId.slice(-3)) + 1;
+                    }
+
+                    const customerId = `PHAR${serialNumber.toString().padStart(3, '0')}`;
+
+                    newCustomer.customerId = customerId;
+
+                    const result = await customerCollections.insertOne(newCustomer);
+                    res.send(result);
+                } else {
+                    console.error('Error creating customer:', error);
+                    res.status(500).send({ message: 'Customer already exists.', error });
+                }
+            } catch (error) {
+                console.error('Error creating customer:', error);
+                res.status(500).send({ message: 'Failed to create customer', error });
+            }
+        });
+
+        /******************** Admin Section ********************/
         // admin purchase order API
         app.post('/purchase-order', async (req, res) => {
             const newProduct = req.body;
