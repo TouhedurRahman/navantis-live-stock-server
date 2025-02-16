@@ -167,6 +167,31 @@ async function run() {
             res.send(result);
         });
 
+        // update customer(s) status API
+		app.patch('/customer/:id', async (req, res) => {
+            try {
+                const { id } = req.params;
+                const updatedCustomer = req.body;
+                const filter = { _id: new ObjectId(id) };
+                const options = { upsert: true };
+        
+                const updatedDoc = {
+                    $set: {
+                        status: updatedCustomer.status,
+                        ...(updatedCustomer.status === 'approved' && {
+                            approvedBy: updatedCustomer.approvedBy,
+                            approvedEmail: updatedCustomer.approvedEmail
+                        })
+                    }
+                };
+        
+                const result = await customerCollections.updateOne(filter, updatedDoc, options);
+                res.send(result);
+            } catch (error) {
+                res.status(500).json({ message: "Internal Server Error", error });
+            }
+        });
+
         /******************** Admin Section ********************/
         // admin purchase order API
         app.post('/purchase-order', async (req, res) => {
