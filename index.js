@@ -213,6 +213,14 @@ async function run() {
             }
         });
 
+        // delete customer(s) API
+        app.delete('/customer/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await customerCollections.deleteOne(query);
+            res.send(result);
+        });
+
         /******************** Admin Section ********************/
         // admin purchase order API
         app.post('/purchase-order', async (req, res) => {
