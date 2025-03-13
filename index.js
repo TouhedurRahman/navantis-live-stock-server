@@ -127,33 +127,33 @@ async function run() {
 
         /******************** Customer(s) Section ********************/
         // add a new customer(s) API
-        app.post('/customers', async(req, res) => {
+        app.post('/customers', async (req, res) => {
             try {
                 const newCustomer = req.body;
-
+        
                 const existingCustomer = await customerCollections.findOne({
-                    customerName: newCustomer.customerName
+                    customerName: { $regex: `^${newCustomer.customerName}$`, $options: 'i' }
                 });
-
+        
                 if (!existingCustomer) {
-                    const latestCustomer = await customerCollections
-                        .findOne({ customerId: { $regex: `^PHAR` } }, { sort: { customerId: -1 } });
+                    const latestCustomer = await customerCollections.findOne(
+                        { customerId: { $regex: `^PHAR` } },
+                        { sort: { customerId: -1 } }
+                    );
         
                     let serialNumber = 1;
                     if (latestCustomer) {
                         const latestCustomerId = latestCustomer.customerId;
                         serialNumber = parseInt(latestCustomerId.slice(-3)) + 1;
                     }
-
+        
                     const customerId = `PHAR${serialNumber.toString().padStart(3, '0')}`;
-
                     newCustomer.customerId = customerId;
-
+        
                     const result = await customerCollections.insertOne(newCustomer);
                     res.send(result);
                 } else {
-                    console.error('Error creating customer:', error);
-                    res.status(500).send({ message: 'Customer already exists.', error });
+                    res.status(400).send({ message: 'Customer already exists.' });
                 }
             } catch (error) {
                 console.error('Error creating customer:', error);
