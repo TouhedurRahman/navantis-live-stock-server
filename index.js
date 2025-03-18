@@ -231,6 +231,7 @@ async function run() {
 
                 const existingProduct = await adminPuchaseCollections.findOne({
                     productName: newProduct.productName,
+                    netweight: newProduct.netweight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                     orderDate: productDate,
@@ -275,6 +276,7 @@ async function run() {
 
                 const existingProduct = await priceUpdateCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     date: productDate,
                 });
 
@@ -366,6 +368,7 @@ async function run() {
 
                 const existingProduct = await orderStockCollections.findOne({
                     productName: newProduct.productName,
+                    netweight: newProduct.netweight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                     orderDate: productDate,
@@ -412,6 +415,7 @@ async function run() {
             const updateOperations = {
                 $set: {
                     productName: updatedProduct.productName,
+                    netWeight: updatedProduct.netWeight,
                     productCode: updatedProduct.productCode,
                     batch: updatedProduct.batch,
                     expire: updatedProduct.expire,
@@ -451,11 +455,12 @@ async function run() {
         // Add a new product - warehouse API
         app.post('/wh-products', async (req, res) => {
             const newProduct = req.body;
-            const { productName, batch, expire } = newProduct;
+            const { productName, netWeight, batch, expire } = newProduct;
 
             try {
                 const existingProduct = await whProductsCollections.findOne({
                     productName,
+                    netWeight,
                     batch,
                     expire,
                 });
@@ -485,7 +490,10 @@ async function run() {
             const updatedProduct = req.body;
         
             try {
-                const existingProducts = await whProductsCollections.find({ productName: updatedProduct.productName }).toArray();
+                const existingProducts = await whProductsCollections.find({ 
+                    productName: updatedProduct.productName,
+                    netWeight: updatedProduct.netWeight,
+                }).toArray();
         
                 if (existingProducts.length > 0) {
                     await whProductsCollections.updateMany(
@@ -582,6 +590,7 @@ async function run() {
 
                 const existingProduct = await whStockInCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                     date: productDate,
@@ -722,6 +731,7 @@ async function run() {
 
                 const existingRequestedProduct = await depotRequestCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     status: "requested",
                     // requestedDate: productDate
                 });
