@@ -324,6 +324,7 @@ async function run() {
 
                 const existingProduct = await damagedAndExpiredCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                     status: newProduct.status,
@@ -634,6 +635,7 @@ async function run() {
 
                 const existingProduct = await whStockOutCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                     date: productDate,
@@ -799,6 +801,7 @@ async function run() {
 
                 const existingProduct = await depotReceiveReqCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                     date: productDate,
@@ -845,7 +848,10 @@ async function run() {
 
             try {
                 const priceUpdateResult = await depotProductsCollections.updateMany(
-                    { productName: newProduct.productName },
+                    { 
+                        productName: newProduct.productName,
+                        netWeight: newProduct.netWeight
+                    },
                     {
                         $set: {
                             actualPrice: Number(newProduct.actualPrice),
@@ -856,6 +862,7 @@ async function run() {
         
                 const quantityFilter = {
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                 };
@@ -889,7 +896,7 @@ async function run() {
             } catch (error) {
                 res.status(500).send({ message: 'Error adding or updating product', error });
             }
-        });       
+        });
 
         // get all depot products API
         app.get('/depot-products', async (req, res) => {
@@ -903,11 +910,17 @@ async function run() {
             const updatedProduct = req.body;
         
             try {
-                const existingProducts = await depotProductsCollections.find({ productName: updatedProduct.productName }).toArray();
+                const existingProducts = await depotProductsCollections.find({
+                    productName: updatedProduct.productName,
+                    netWeight: updatedProduct.netWeight
+                }).toArray();
         
                 if (existingProducts.length > 0) {
                     await depotProductsCollections.updateMany(
-                        { productName: updatedProduct.productName },
+                        { 
+                            productName: updatedProduct.productName,
+                            netWeight: updatedProduct.netWeight
+                        },
                         {
                             $set: {
                                 actualPrice: Number(updatedProduct.actualPrice),
@@ -918,6 +931,7 @@ async function run() {
         
                     const filter = { 
                         productName: updatedProduct.productName,
+                        netWeight: updatedProduct.netWeight,
                         batch: updatedProduct.batch,
                         expire: updatedProduct.expire,
                     };
@@ -951,6 +965,7 @@ async function run() {
                     const updateOperations = {
                         $set: {
                             productName: updatedProduct.productName,
+                            netWeight: updatedProduct.netWeight,
                             productCode: updatedProduct.productCode,
                             batch: updatedProduct.batch,
                             expire: updatedProduct.expire,
@@ -1002,6 +1017,7 @@ async function run() {
 
                 const existingProduct = await depotExpReqCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                     status: "pending",
@@ -1051,6 +1067,7 @@ async function run() {
             try {
                 const existingProduct = await depotExpiredCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                 });
@@ -1090,6 +1107,7 @@ async function run() {
 
                 const existingProduct = await depotStockInCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                     date: productDate,
@@ -1127,6 +1145,7 @@ async function run() {
 
                 const existingProduct = await depotStockOutCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                     date: productDate,
