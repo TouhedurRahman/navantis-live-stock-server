@@ -1204,6 +1204,27 @@ async function run() {
             res.send(result);
         });
 
+        // update rider(s) API
+		app.patch('/rider/:id', async (req, res) => {
+            try {
+                const { id } = req.params;
+                const updatedRider = req.body;
+                const filter = { _id: new ObjectId(id) };
+                const options = { upsert: true };
+        
+                const updatedDoc = {
+                    $set: {
+                        ...updatedRider
+                    }
+                };
+        
+                const result = await riderCollections.updateOne(filter, updatedDoc, options);
+                res.send(result);
+            } catch (error) {
+                res.status(500).json({ message: "Internal Server Error", error });
+            }
+        });
+
         // delete rider(s) API
         app.delete('/rider/:id', async (req, res) => {
             const id = req.params.id;
