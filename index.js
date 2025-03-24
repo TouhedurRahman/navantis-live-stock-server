@@ -1204,6 +1204,14 @@ async function run() {
             res.send(result);
         });
 
+        // delete rider(s) API
+        app.delete('/rider/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await riderCollections.deleteOne(query);
+            res.send(result);
+        });
+
         /******************** Order Section ********************/
 
         // add a new order API
