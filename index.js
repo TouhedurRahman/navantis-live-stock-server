@@ -1200,7 +1200,7 @@ async function run() {
 
         // get all riders API
         app.get('/riders', async(req, res) => {
-            const result = await riderCollections.find().sort({ _id: -1 }).toArray();
+            const result = await riderCollections.find().toArray();
             res.send(result);
         });
 
