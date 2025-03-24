@@ -56,6 +56,9 @@ async function run() {
         const depotExpReqCollections = client.db('navantis_live_stock_db').collection('expire_request');
         const depotExpiredCollections = client.db('navantis_live_stock_db').collection('depot_expired');
 
+        /* rider collections */
+        const riderCollections = client.db('navantis_live_stock_db').collection('riders');
+
         /* order collections */
         const orderCollections = client.db('navantis_live_stock_db').collection('orders');
 
@@ -1176,6 +1179,23 @@ async function run() {
         app.get('/stock-out-depot', async (req, res) => {
             const result = await depotStockOutCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
+        });
+
+        // add new rider API
+        app.post('/riders', async (req, res) => {
+            try {
+                const newRider = req.body;
+
+                const count = await riderCollections.countDocuments({});
+                const riderId = `DA${String(count + 1).padStart(3, '0')}`;
+
+                newRider.riderId = riderId;
+        
+                const result = await riderCollections.insertOne(newRider);
+                res.send(result);
+            } catch (error) {
+                res.status(500).send({ message: "Error adding rider", error });
+            }
         });
 
         /******************** Order Section ********************/
