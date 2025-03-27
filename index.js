@@ -1343,6 +1343,12 @@ async function run() {
             }
         });
 
+        // get all payment(s) API
+        app.get('/payments', async (req, res) => {
+            const result = await paymentCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         /******************** Return Section ********************/
         // send return(s) data API
 		app.post('/returns', async (req, res) => {
@@ -1354,12 +1360,6 @@ async function run() {
         // get all return(s) API
         app.get('/returns', async(req, res) => {
             const result = await returnCollections.find().toArray();
-            res.send(result);
-        });
-
-        // get all payment(s) API
-        app.get('/payments', async (req, res) => {
-            const result = await paymentCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
