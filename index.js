@@ -68,6 +68,9 @@ async function run() {
         /* return collections */
         const returnCollections = client.db('navantis_live_stock_db').collection('returns');
 
+        /* expired return collections */
+        const expiredReturnCollections = client.db('navantis_live_stock_db').collection('expired_returns');
+
         /******************** User(s) Section ********************/
         // send user(s) data API
 		app.post('/users', async (req, res) => {
@@ -1360,6 +1363,20 @@ async function run() {
         // get all return(s) API
         app.get('/returns', async(req, res) => {
             const result = await returnCollections.find().toArray();
+            res.send(result);
+        });
+
+        /******************** Expired Return Section ********************/
+        // send expired return(s) data API
+		app.post('/expired-returns', async (req, res) => {
+			const newReturn = req.body;
+			const result = await expiredReturnCollections.insertOne(newReturn);
+			res.send(result);
+		});
+
+        // get all expired return(s) API
+        app.get('/expired-returns', async(req, res) => {
+            const result = await expiredReturnCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
