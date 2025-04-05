@@ -1380,6 +1380,27 @@ async function run() {
             res.send(result);
         });
 
+        // update expired return(s) status API
+		app.patch('/expired-returns/:id', async (req, res) => {
+            try {
+                const { id } = req.params;
+                const updatedExReturnReq = req.body;
+                const filter = { _id: new ObjectId(id) };
+                const options = { upsert: true };
+        
+                const updatedDoc = {
+                    $set: {
+                        status: updatedExReturnReq.status,
+                    }
+                };
+        
+                const result = await expiredReturnCollections.updateOne(filter, updatedDoc, options);
+                res.send(result);
+            } catch (error) {
+                res.status(500).json({ message: "Internal Server Error", error });
+            }
+        });
+
         // Send a ping to confirm a successful connection
         await client.db('admin').command({ ping: 1 });
         console.log("Pinged your deployment. You're successfully connected to MongoDB!");
