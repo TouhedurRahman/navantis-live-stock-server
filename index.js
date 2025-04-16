@@ -273,6 +273,14 @@ async function run() {
             res.send(result);
         });
 
+        // delete admin purchase order(s) API
+        app.delete('/purchase-order/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await adminPuchaseCollections.deleteOne(query);
+            res.send(result);
+        });
+
         // add a new price change details API
         app.post('/price-update', async (req, res) => {
             const newProduct = req.body;
