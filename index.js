@@ -691,6 +691,7 @@ async function run() {
 
                 const existingPendingProduct = await whDamagedProductsCollections.findOne({
                     productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                     status: "pending",
