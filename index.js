@@ -1276,7 +1276,7 @@ async function run() {
                     const today = new Date();
                     const month = String(today.getMonth() + 1).padStart(2, '0');
                     const year = String(today.getFullYear()).slice(-2);
-                    const prefix = `NPL${month}${year}`;
+                    const prefix = `NPL${year}${month}`;
 
                     const latestOrder = await orderCollections.findOne(
                         { invoice: { $regex: `^${prefix}` } },
