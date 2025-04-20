@@ -1251,7 +1251,7 @@ async function run() {
             try {
                 const newOrder = req.body;
 
-                if (newOrder.status && newOrder.status.toLowerCase() !== 'pending') {
+                /* if (newOrder.status && newOrder.status.toLowerCase() !== 'pending') {
                     const today = new Date();
                     const day = String(today.getDate()).padStart(2, '0');
                     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -1269,6 +1269,27 @@ async function run() {
 
                     const invoice = `NPL${formattedDate}INV${serialNumber.toString().padStart(6, '0')}`;
 
+                    newOrder.invoice = invoice;
+                } */
+
+                if (newOrder.status && newOrder.status.toLowerCase() !== 'pending') {
+                    const today = new Date();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const year = String(today.getFullYear()).slice(-2);
+                    const prefix = `NPL${month}${year}`;
+
+                    const latestOrder = await orderCollections.findOne(
+                        { invoice: { $regex: `^${prefix}` } },
+                        { sort: { invoice: -1 } }
+                    );
+
+                    let serialNumber = 1;
+                    if (latestOrder && /^NPL\d{4}\d{4}$/.test(latestOrder.invoice)) {
+                        const latestInvoice = latestOrder.invoice;
+                        serialNumber = parseInt(latestInvoice.slice(-4)) + 1;
+                    }
+
+                    const invoice = `${prefix}${serialNumber.toString().padStart(4, '0')}`;
                     newOrder.invoice = invoice;
                 }
                 
