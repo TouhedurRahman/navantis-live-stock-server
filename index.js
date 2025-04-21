@@ -1093,11 +1093,14 @@ async function run() {
             const newProduct = req.body;
 
             try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
                 const existingProduct = await depotExpiredCollections.findOne({
                     productName: newProduct.productName,
                     netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
+                    date: productDate
                 });
 
                 if (existingProduct) {
