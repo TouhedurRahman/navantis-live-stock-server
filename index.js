@@ -27,49 +27,52 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
+        /******************** Database name ********************/
+        const dbName = process.env.DB_NAME;
+
         /******************** Database collections ********************/
 
         /* user collections */
-        const usersCollection = client.db('navantis_live_stock_db').collection('users');
+        const usersCollection = client.db(dbName).collection('users');
 
         /* customer collections */
-        const customerCollections = client.db('navantis_live_stock_db').collection('customers');
+        const customerCollections = client.db(dbName).collection('customers');
 
         /* admin collections */
-        const adminPuchaseCollections = client.db('navantis_live_stock_db').collection('order_list');
-        const priceUpdateCollections = client.db('navantis_live_stock_db').collection('price_update');
-        const damagedAndExpiredCollections = client.db('navantis_live_stock_db').collection('damaged_expired');
+        const adminPuchaseCollections = client.db(dbName).collection('order_list');
+        const priceUpdateCollections = client.db(dbName).collection('price_update');
+        const damagedAndExpiredCollections = client.db(dbName).collection('damaged_expired');
 
         /* warehouse collections */
-        const orderStockCollections = client.db('navantis_live_stock_db').collection('order_stock_wh');
-        const whProductsCollections = client.db('navantis_live_stock_db').collection('wh_products');
-        const whStockInCollections = client.db('navantis_live_stock_db').collection('wh_stock_in');
-        const whStockOutCollections = client.db('navantis_live_stock_db').collection('wh_stock_out');
-        const whDamagedProductsCollections = client.db('navantis_live_stock_db').collection('damaged_products');
+        const orderStockCollections = client.db(dbName).collection('order_stock_wh');
+        const whProductsCollections = client.db(dbName).collection('wh_products');
+        const whStockInCollections = client.db(dbName).collection('wh_stock_in');
+        const whStockOutCollections = client.db(dbName).collection('wh_stock_out');
+        const whDamagedProductsCollections = client.db(dbName).collection('damaged_products');
 
         /* depot collections */
-        const depotReceiveReqCollections = client.db('navantis_live_stock_db').collection('depot_receive');
-        const depotRequestCollections = client.db('navantis_live_stock_db').collection('depot_request');
-        const depotProductsCollections = client.db('navantis_live_stock_db').collection('depot_products');
-        const depotStockInCollections = client.db('navantis_live_stock_db').collection('depot_stock_in');
-        const depotStockOutCollections = client.db('navantis_live_stock_db').collection('depot_stock_out');
-        const depotExpReqCollections = client.db('navantis_live_stock_db').collection('expire_request');
-        const depotExpiredCollections = client.db('navantis_live_stock_db').collection('depot_expired');
+        const depotReceiveReqCollections = client.db(dbName).collection('depot_receive');
+        const depotRequestCollections = client.db(dbName).collection('depot_request');
+        const depotProductsCollections = client.db(dbName).collection('depot_products');
+        const depotStockInCollections = client.db(dbName).collection('depot_stock_in');
+        const depotStockOutCollections = client.db(dbName).collection('depot_stock_out');
+        const depotExpReqCollections = client.db(dbName).collection('expire_request');
+        const depotExpiredCollections = client.db(dbName).collection('depot_expired');
 
         /* rider collections */
-        const riderCollections = client.db('navantis_live_stock_db').collection('riders');
+        const riderCollections = client.db(dbName).collection('riders');
 
         /* order collections */
-        const orderCollections = client.db('navantis_live_stock_db').collection('orders');
+        const orderCollections = client.db(dbName).collection('orders');
 
         /* order collections */
-        const paymentCollections = client.db('navantis_live_stock_db').collection('payments');
+        const paymentCollections = client.db(dbName).collection('payments');
 
         /* return collections */
-        const returnCollections = client.db('navantis_live_stock_db').collection('returns');
+        const returnCollections = client.db(dbName).collection('returns');
 
         /* expired return collections */
-        const expiredReturnCollections = client.db('navantis_live_stock_db').collection('expired_returns');
+        const expiredReturnCollections = client.db(dbName).collection('expired_returns');
 
         /******************** User(s) Section ********************/
         // send user(s) data API
