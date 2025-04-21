@@ -699,27 +699,40 @@ async function run() {
                 });
 
                 if (existingPendingProduct) {
-                    const updatedProduct = await whDamagedProductsCollections.updateOne(
-                        { _id: existingPendingProduct._id },
-                        {
-                            $set: {
-                                status: newProduct.status,
-                                remarks: newProduct.remarks,
-                            },
-                            $inc: {
-                                damageQuantity: Number(newProduct.damageQuantity)
-                            },
-                        }
-                    );
-                    res.send({ message: 'Product quantity updated', updatedProduct });
+                    if (newProduct.status === 'pending') {
+                        const updatedProduct = await whDamagedProductsCollections.updateOne(
+                            { _id: new ObjectId(existingPendingProduct._id) },
+                            {
+                                $set: {
+                                    remarks: newProduct.remarks,
+                                },
+                                $inc: {
+                                    damageQuantity: Number(newProduct.damageQuantity)
+                                },
+                            }
+                        );
+                        res.send({ message: 'Pending product quantity updated', updatedProduct });
+                    } else {
+                        const updatedProduct = await whDamagedProductsCollections.updateOne(
+                            { _id: new ObjectId(existingPendingProduct._id) },
+                            {
+                                $set: {
+                                    status: newProduct.status,
+                                    remarks: newProduct.remarks,
+                                },
+                            }
+                        );
+                        res.send({ message: 'Product status updated to approved', updatedProduct });
+                    }
+
                 } else {
                     newProduct.date = productDate;
                     const result = await whDamagedProductsCollections.insertOne(newProduct);
-                    res.send({ message: 'Damaged product added', result });
+                    res.send({ message: 'New damaged product added', result });
                 }
             } catch (error) {
-                console.error('Error processing stock-in:', error);
-                res.status(500).send({ message: 'Error processing stock-in', error });
+                console.error('Error processing damaged-in:', error);
+                res.status(500).send({ message: 'Error processing damaged-in', error });
             }
         });
 
