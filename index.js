@@ -49,6 +49,7 @@ async function run() {
         const whStockInCollections = database.collection('wh_stock_in');
         const whStockOutCollections = database.collection('wh_stock_out');
         const whDamagedProductsCollections = database.collection('damaged_products');
+        const whDamagedCollections = database.collection('wh_damaged');
 
         /* depot collections */
         const depotReceiveReqCollections = database.collection('depot_receive');
@@ -750,6 +751,47 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await whDamagedProductsCollections.deleteOne(query);
+            res.send(result);
+        });
+
+        // add warehouse damaged product API
+        app.post('/warehouse-damaged', async (req, res) => {
+            const newProduct = req.body;
+
+            try {
+                const productDate = newProduct.date || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await whDamagedCollections.findOne({
+                    productName: newProduct.productName,
+                    netWeight: newProduct.netWeight,
+                    batch: newProduct.batch,
+                    expire: newProduct.expire,
+                    date: productDate
+                });
+
+                if (existingProduct) {
+                    const updatedProduct = await whDamagedCollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            $inc: {
+                                totalQuantity: Number(newProduct.totalQuantity),
+                            },
+                        }
+                    );
+                    res.send({ message: 'Product quantity updated', updatedProduct });
+                } else {
+                    const result = await whDamagedCollections.insertOne(newProduct);
+                    res.send({ message: 'Damaged product added', result });
+                }
+            } catch (error) {
+                console.error('Error processing stock-in:', error);
+                res.status(500).send({ message: 'Error processing stock-in', error });
+            }
+        });
+
+        // get all warehouse damaged API
+        app.get('/warehouse-damaged', async (req, res) => {
+            const result = await whDamagedCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
