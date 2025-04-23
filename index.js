@@ -44,12 +44,12 @@ async function run() {
         const damagedAndExpiredCollections = database.collection('damaged_expired');
 
         /* warehouse collections */
-        const orderStockCollections = database.collection('order_stock_wh');
-        const whProductsCollections = database.collection('wh_products');
-        const whStockInCollections = database.collection('wh_stock_in');
-        const whStockOutCollections = database.collection('wh_stock_out');
+        const orderStockCollections = database.collection('order_stock_warehouse');
+        const whProductsCollections = database.collection('warehouse_products');
+        const whStockInCollections = database.collection('warehouse_stock_in');
+        const whStockOutCollections = database.collection('warehouse_stock_out');
         const whDamagedProductsCollections = database.collection('damaged_products');
-        const whDamagedCollections = database.collection('wh_damaged');
+        const whDamagedCollections = database.collection('warehouse_damaged');
 
         /* depot collections */
         const depotReceiveReqCollections = database.collection('depot_receive');
@@ -147,18 +147,17 @@ async function run() {
         
                 if (!existingCustomer) {
                     const latestCustomer = await customerCollections.findOne(
-                        { customerId: { $regex: `^PHAR` } },
+                        { customerId: { $type: 'string', $regex: `^\\d+$` } },
                         { sort: { customerId: -1 } }
                     );
         
-                    let serialNumber = 1;
+                    let serialNumber = 500001;
                     if (latestCustomer) {
-                        const latestCustomerId = latestCustomer.customerId;
-                        serialNumber = parseInt(latestCustomerId.slice(-3)) + 1;
+                        const latestCustomerId = parseInt(latestCustomer.customerId);
+                        serialNumber = latestCustomerId + 1;
                     }
         
-                    const customerId = `PHAR${serialNumber.toString().padStart(3, '0')}`;
-                    newCustomer.customerId = customerId;
+                    newCustomer.customerId = serialNumber.toString();
         
                     const result = await customerCollections.insertOne(newCustomer);
                     res.send(result);
