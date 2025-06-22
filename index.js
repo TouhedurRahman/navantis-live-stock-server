@@ -77,88 +77,88 @@ async function run() {
 
         /******************** User(s) Section ********************/
         // send user(s) data API
-		app.post('/users', async (req, res) => {
-			const user = req.body;
-			const query = { email: user.email };
-			const existingUser = await usersCollection.findOne(query);
-			if (existingUser) {
-				return res.send({ message: "User already exists" })
-			}
-			const result = await usersCollection.insertOne(user);
-			res.send(result);
-		});
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email };
+            const existingUser = await usersCollection.findOne(query);
+            if (existingUser) {
+                return res.send({ message: "User already exists" })
+            }
+            const result = await usersCollection.insertOne(user);
+            res.send(result);
+        });
 
         // get all user(s) API
-        app.get('/users', async(req, res) => {
+        app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
         });
 
         // get single user(s) api
-		app.get('/user/:email', async (req, res) => {
-			const email = req.params.email;
-			const query = { email: email }
-			const result = await usersCollection.findOne(query);
-			res.send(result);
-		});
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const result = await usersCollection.findOne(query);
+            res.send(result);
+        });
 
         // update user's designation API
-		app.patch('/users/admin/:id', async (req, res) => {
-			const id = req.params.id;
-			const filter = { _id: new ObjectId(id) }
+        app.patch('/users/admin/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
             const updatedDesignation = req.body;
-			const updateDoc = {
-				$set: {
-					designation: updatedDesignation.designation
-				},
-			};
-			const result = await usersCollection.updateOne(filter, updateDoc);
-			res.send(result);
-		});
+            const updateDoc = {
+                $set: {
+                    designation: updatedDesignation.designation
+                },
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
 
         // update user(s) profile API
-		app.patch('/user/:email', async (req, res) => {
-			const email = req.params.email;
-			const filter = { email: email };
-			const updatedUser = req.body;
-			const options = { upsert: true };
-			const updatedDoc = {
-				$set: {
-					...updatedUser,
-				}
-			}
-			const result = await usersCollection.updateOne(
-				filter,
-				updatedDoc,
-				options
-			);
-			res.send(result);
-		});
+        app.patch('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updatedUser = req.body;
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    ...updatedUser,
+                }
+            }
+            const result = await usersCollection.updateOne(
+                filter,
+                updatedDoc,
+                options
+            );
+            res.send(result);
+        });
 
         /******************** Customer(s) Section ********************/
         // add a new customer(s) API
         app.post('/customers', async (req, res) => {
             try {
                 const newCustomer = req.body;
-        
+
                 const existingCustomer = await customerCollections.findOne({
                     customerName: { $regex: `^${newCustomer.customerName}$`, $options: 'i' }
                 });
-        
+
                 if (!existingCustomer) {
                     const latestCustomer = await customerCollections.findOne(
                         { customerId: { $type: 'string', $regex: `^\\d+$` } },
                         { sort: { customerId: -1 } }
                     );
-        
+
                     let serialNumber = 500001;
                     if (latestCustomer) {
                         const latestCustomerId = parseInt(latestCustomer.customerId);
                         serialNumber = latestCustomerId + 1;
                     }
-        
+
                     newCustomer.customerId = serialNumber.toString();
-        
+
                     const result = await customerCollections.insertOne(newCustomer);
                     res.send(result);
                 } else {
@@ -177,19 +177,19 @@ async function run() {
         });
 
         // update customer(s) API
-		app.patch('/customer/:id', async (req, res) => {
+        app.patch('/customer/:id', async (req, res) => {
             try {
                 const { id } = req.params;
                 const updatedCustomer = req.body;
                 const filter = { _id: new ObjectId(id) };
                 const options = { upsert: true };
-        
+
                 const updatedDoc = {
                     $set: {
                         ...updatedCustomer
                     }
                 };
-        
+
                 const result = await customerCollections.updateOne(filter, updatedDoc, options);
                 res.send(result);
             } catch (error) {
@@ -198,13 +198,13 @@ async function run() {
         });
 
         // update customer(s) status API
-		app.patch('/customer-status/:id', async (req, res) => {
+        app.patch('/customer-status/:id', async (req, res) => {
             try {
                 const { id } = req.params;
                 const updatedCustomer = req.body;
                 const filter = { _id: new ObjectId(id) };
                 const options = { upsert: true };
-        
+
                 const updatedDoc = {
                     $set: {
                         status: updatedCustomer.status,
@@ -214,7 +214,7 @@ async function run() {
                         })
                     }
                 };
-        
+
                 const result = await customerCollections.updateOne(filter, updatedDoc, options);
                 res.send(result);
             } catch (error) {
@@ -506,13 +506,13 @@ async function run() {
         app.patch('/wh-product/:id', async (req, res) => {
             const { id } = req.params;
             const updatedProduct = req.body;
-        
+
             try {
-                const existingProducts = await whProductsCollections.find({ 
+                const existingProducts = await whProductsCollections.find({
                     productName: updatedProduct.productName,
                     netWeight: updatedProduct.netWeight,
                 }).toArray();
-        
+
                 if (existingProducts.length > 0) {
                     await whProductsCollections.updateMany(
                         { productName: updatedProduct.productName },
@@ -523,21 +523,21 @@ async function run() {
                             },
                         }
                     );
-        
-                    const filter = { 
+
+                    const filter = {
                         productName: updatedProduct.productName,
                         batch: updatedProduct.batch,
                         expire: updatedProduct.expire,
                     };
-        
+
                     const updatedQuantity = {
-                        $set: { 
+                        $set: {
                             totalQuantity: Number(updatedProduct.totalQuantity),
                         },
                     };
-        
+
                     const updatedQuantityResult = await whProductsCollections.updateOne(filter, updatedQuantity);
-        
+
                     if (Number(updatedProduct.totalQuantity) === 0) {
                         await whProductsCollections.deleteOne(filter);
                         res.send({
@@ -547,7 +547,7 @@ async function run() {
                         });
                         return;
                     }
-        
+
                     res.send({
                         message: 'Product updated successfully',
                         priceUpdate: true,
@@ -569,7 +569,7 @@ async function run() {
                     };
 
                     const result = await whProductsCollections.updateOne(filter, updateOperations, options);
-        
+
                     if (Number(updatedProduct.totalQuantity) === 0) {
                         await whProductsCollections.deleteOne(filter);
                         res.send({
@@ -592,7 +592,7 @@ async function run() {
                 res.status(500).send({ error: 'Failed to update product' });
             }
         });
-        
+
         // get all warehouse stock-in API
         app.get('/stock-in-wh', async (req, res) => {
             const result = await whStockInCollections.find().sort({ _id: -1 }).toArray();
@@ -834,7 +834,7 @@ async function run() {
         });
 
         // get all depot request product API
-        app.get('/depot-request', async(req, res) => {
+        app.get('/depot-request', async (req, res) => {
             const result = await depotRequestCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
@@ -901,7 +901,7 @@ async function run() {
         });
 
         // get all depot receive request API
-        app.get('/depot-receive-req', async(req, res) => {
+        app.get('/depot-receive-req', async (req, res) => {
             const result = await depotReceiveReqCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
@@ -920,7 +920,7 @@ async function run() {
 
             try {
                 const priceUpdateResult = await depotProductsCollections.updateMany(
-                    { 
+                    {
                         productName: newProduct.productName,
                         netWeight: newProduct.netWeight
                     },
@@ -931,28 +931,28 @@ async function run() {
                         },
                     }
                 );
-        
+
                 const quantityFilter = {
                     productName: newProduct.productName,
                     netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
                 };
-        
+
                 const existingProduct = await depotProductsCollections.findOne(quantityFilter);
-        
+
                 if (existingProduct) {
                     const updatedQuantity = {
                         $inc: {
                             totalQuantity: Number(newProduct.totalQuantity),
                         },
                     };
-        
+
                     const quantityUpdateResult = await depotProductsCollections.updateOne(
                         quantityFilter,
                         updatedQuantity
                     );
-        
+
                     res.send({
                         message: 'Product updated successfully',
                         priceUpdate: priceUpdateResult.modifiedCount > 0,
@@ -980,16 +980,16 @@ async function run() {
         app.patch('/depot-product/:id', async (req, res) => {
             const { id } = req.params;
             const updatedProduct = req.body;
-        
+
             try {
                 const existingProducts = await depotProductsCollections.find({
                     productName: updatedProduct.productName,
                     netWeight: updatedProduct.netWeight
                 }).toArray();
-        
+
                 if (existingProducts.length > 0) {
                     await depotProductsCollections.updateMany(
-                        { 
+                        {
                             productName: updatedProduct.productName,
                             netWeight: updatedProduct.netWeight
                         },
@@ -1000,22 +1000,22 @@ async function run() {
                             },
                         }
                     );
-        
-                    const filter = { 
+
+                    const filter = {
                         productName: updatedProduct.productName,
                         netWeight: updatedProduct.netWeight,
                         batch: updatedProduct.batch,
                         expire: updatedProduct.expire,
                     };
-        
+
                     const updatedQuantity = {
-                        $set: { 
+                        $set: {
                             totalQuantity: Number(updatedProduct.totalQuantity),
                         },
                     };
-        
+
                     const updatedQuantityResult = await depotProductsCollections.updateOne(filter, updatedQuantity);
-        
+
                     if (Number(updatedProduct.totalQuantity) === 0) {
                         await depotProductsCollections.deleteOne(filter);
                         res.send({
@@ -1025,7 +1025,7 @@ async function run() {
                         });
                         return;
                     }
-        
+
                     res.send({
                         message: 'Product updated successfully',
                         priceUpdate: true,
@@ -1048,7 +1048,7 @@ async function run() {
                     };
 
                     const result = await depotProductsCollections.updateOne(filter, updateOperations, options);
-        
+
                     if (Number(updatedProduct.totalQuantity) === 0) {
                         await depotProductsCollections.deleteOne(filter);
                         res.send({
@@ -1262,7 +1262,7 @@ async function run() {
                 const riderId = `DA${String(count + 1).padStart(3, '0')}`;
 
                 newRider.riderId = riderId;
-        
+
                 const result = await riderCollections.insertOne(newRider);
                 res.send(result);
             } catch (error) {
@@ -1271,25 +1271,25 @@ async function run() {
         });
 
         // get all riders API
-        app.get('/riders', async(req, res) => {
+        app.get('/riders', async (req, res) => {
             const result = await riderCollections.find().toArray();
             res.send(result);
         });
 
         // update rider(s) API
-		app.patch('/rider/:id', async (req, res) => {
+        app.patch('/rider/:id', async (req, res) => {
             try {
                 const { id } = req.params;
                 const updatedRider = req.body;
                 const filter = { _id: new ObjectId(id) };
                 const options = { upsert: true };
-        
+
                 const updatedDoc = {
                     $set: {
                         ...updatedRider
                     }
                 };
-        
+
                 const result = await riderCollections.updateOne(filter, updatedDoc, options);
                 res.send(result);
             } catch (error) {
@@ -1353,7 +1353,7 @@ async function run() {
                     const invoice = `${prefix}${serialNumber.toString().padStart(4, '0')}`;
                     newOrder.invoice = invoice;
                 }
-                
+
                 delete newOrder._id;
 
                 const result = await orderCollections.insertOne(newOrder);
@@ -1365,18 +1365,18 @@ async function run() {
         });
 
         // update order API
-		app.patch('/order/:id', async (req, res) => {
-			const id = req.params.id;
-			const filter = { _id: new ObjectId(id) }
+        app.patch('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
             const updatedOrder = req.body;
-			const updateDoc = {
-				$set: {
-					...updatedOrder
-				},
-			};
-			const result = await orderCollections.updateOne(filter, updateDoc);
-			res.send(result);
-		});
+            const updateDoc = {
+                $set: {
+                    ...updatedOrder
+                },
+            };
+            const result = await orderCollections.updateOne(filter, updateDoc);
+            res.send(result);
+        });
 
         // get all order(s) API
         app.get('/orders', async (req, res) => {
@@ -1396,43 +1396,43 @@ async function run() {
         // add new payment API
         app.post('/payments', async (req, res) => {
             const newPayment = req.body;
-          
-            try {
-              const paidDate = newPayment.paidDate || new Date().toISOString().split('T')[0];
-          
-              const existingProduct = await paymentCollections.findOne({
-                invoice: newPayment.invoice,
-                paidDate: paidDate,
-              });
-          
-              if (existingProduct) {
-                const updatedPaid = parseFloat(existingProduct.paid) + parseFloat(newPayment.paymentAmount);
-                const updatedDue = parseFloat((existingProduct.totalPayable - updatedPaid).toFixed(2));
-          
-                const updatedProduct = await paymentCollections.updateOne(
-                  { _id: existingProduct._id },
-                  {
-                    $set: {
-                      paid: updatedPaid,
-                      totalPayable: newPayment.totalPayable,
-                      due: updatedDue,
-                      status: updatedDue === 0 ? 'paid' : 'due',
-                      deliveryMan: newPayment.deliveryMan,
-                    },
-                  }
-                );
-          
-                res.send({ message: 'Payment updated successfully', updatedProduct });
-              } else {
-                newPayment.paidDate = paidDate;
-                delete newPayment.paymentAmount;
 
-                const result = await paymentCollections.insertOne(newPayment);
-                res.send({ message: 'New payment record added', result });
-              }
+            try {
+                const paidDate = newPayment.paidDate || new Date().toISOString().split('T')[0];
+
+                const existingProduct = await paymentCollections.findOne({
+                    invoice: newPayment.invoice,
+                    paidDate: paidDate,
+                });
+
+                if (existingProduct) {
+                    const updatedPaid = parseFloat(existingProduct.paid) + parseFloat(newPayment.paymentAmount);
+                    const updatedDue = parseFloat((existingProduct.totalPayable - updatedPaid).toFixed(2));
+
+                    const updatedProduct = await paymentCollections.updateOne(
+                        { _id: existingProduct._id },
+                        {
+                            $set: {
+                                paid: updatedPaid,
+                                totalPayable: newPayment.totalPayable,
+                                due: updatedDue,
+                                status: updatedDue === 0 ? 'paid' : 'due',
+                                deliveryMan: newPayment.deliveryMan,
+                            },
+                        }
+                    );
+
+                    res.send({ message: 'Payment updated successfully', updatedProduct });
+                } else {
+                    newPayment.paidDate = paidDate;
+                    delete newPayment.paymentAmount;
+
+                    const result = await paymentCollections.insertOne(newPayment);
+                    res.send({ message: 'New payment record added', result });
+                }
             } catch (error) {
-              console.error('Error processing payment:', error);
-              res.status(500).send({ message: 'Error processing payment', error });
+                console.error('Error processing payment:', error);
+                res.status(500).send({ message: 'Error processing payment', error });
             }
         });
 
@@ -1444,46 +1444,47 @@ async function run() {
 
         /******************** Return Section ********************/
         // send return(s) data API
-		app.post('/returns', async (req, res) => {
-			const newReturn = req.body;
-			const result = await returnCollections.insertOne(newReturn);
-			res.send(result);
-		});
+        app.post('/returns', async (req, res) => {
+            const newReturn = req.body;
+            const result = await returnCollections.insertOne(newReturn);
+            res.send(result);
+        });
 
         // get all return(s) API
-        app.get('/returns', async(req, res) => {
+        app.get('/returns', async (req, res) => {
             const result = await returnCollections.find().toArray();
             res.send(result);
         });
 
         /******************** Expired Return Section ********************/
         // send expired return(s) data API
-		app.post('/expired-returns', async (req, res) => {
-			const newReturn = req.body;
-			const result = await expiredReturnCollections.insertOne(newReturn);
-			res.send(result);
-		});
+        app.post('/expired-returns', async (req, res) => {
+            const newReturn = req.body;
+            const result = await expiredReturnCollections.insertOne(newReturn);
+            res.send(result);
+        });
 
         // get all expired return(s) API
-        app.get('/expired-returns', async(req, res) => {
+        app.get('/expired-returns', async (req, res) => {
             const result = await expiredReturnCollections.find().sort({ _id: -1 }).toArray();
             res.send(result);
         });
 
         // update expired return(s) status API
-		app.patch('/expired-returns/:id', async (req, res) => {
+        app.patch('/expired-returns/:id', async (req, res) => {
             try {
                 const { id } = req.params;
                 const updatedExReturnReq = req.body;
                 const filter = { _id: new ObjectId(id) };
                 const options = { upsert: true };
-        
+
                 const updatedDoc = {
                     $set: {
                         status: updatedExReturnReq.status,
+                        date: updatedExReturnReq.date,
                     }
                 };
-        
+
                 const result = await expiredReturnCollections.updateOne(filter, updatedDoc, options);
                 res.send(result);
             } catch (error) {
