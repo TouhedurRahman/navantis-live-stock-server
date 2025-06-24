@@ -35,6 +35,9 @@ async function run() {
         /* user collections */
         const usersCollection = database.collection('users');
 
+        /* Territory collections */
+        const territoryCollection = database.collection('territories');
+
         /* customer collections */
         const customerCollections = database.collection('customers');
 
@@ -132,6 +135,19 @@ async function run() {
                 updatedDoc,
                 options
             );
+            res.send(result);
+        });
+
+        /******************** Territory(s) Section ********************/
+        // send territory(s) data API
+        app.post('/territories', async (req, res) => {
+            const territory = req.body;
+            const query = { terriroryName: territory.terriroryName };
+            const existingTerritory = await territoryCollection.findOne(query);
+            if (existingTerritory) {
+                return res.send({ message: "Territory already exists" })
+            }
+            const result = await territoryCollection.insertOne(territory);
             res.send(result);
         });
 
