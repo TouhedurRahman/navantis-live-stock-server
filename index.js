@@ -151,6 +151,12 @@ async function run() {
             res.send(result);
         });
 
+        // get all territory(s) API
+        app.get('/territories', async (req, res) => {
+            const result = await territoryCollection.find().toArray();
+            res.send(result);
+        });
+
         /******************** Customer(s) Section ********************/
         // add a new customer(s) API
         app.post('/customers', async (req, res) => {
