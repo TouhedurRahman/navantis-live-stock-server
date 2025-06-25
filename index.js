@@ -158,6 +158,55 @@ async function run() {
             res.send(result);
         });
 
+        // update territory(s) API
+        app.patch('/territories/:id', async (req, res) => {
+            const { id } = req.params;
+            const { parentTerritory, areaManager, amEmail, zonalManager, zmEmail } = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+            const updateDoc = { $set: {}, $unset: {} };
+
+            if (parentTerritory === "") {
+                updateDoc.$unset.parentTerritory = "";
+            } else if (parentTerritory !== undefined) {
+                updateDoc.$set.parentTerritory = parentTerritory;
+            }
+
+            if (areaManager === "") {
+                updateDoc.$unset.areaManager = "";
+                updateDoc.$unset.amEmail = "";
+            } else if(areaManager === "Vacant") {
+                if (areaManager !== undefined) updateDoc.$set.areaManager = areaManager;
+                updateDoc.$unset.amEmail = "";
+            } else {
+                if (areaManager !== undefined) updateDoc.$set.areaManager = areaManager;
+                if (amEmail !== undefined) updateDoc.$set.amEmail = amEmail;
+            }
+
+            if (zonalManager === "") {
+                updateDoc.$unset.zonalManager = "";
+                updateDoc.$unset.zmEmail = "";
+            } else if(zonalManager === "Vacant") {
+                if (zonalManager !== undefined) updateDoc.$set.zonalManager = zonalManager;
+                updateDoc.$unset.zmEmail = "";
+            } else {
+                if (zonalManager !== undefined) updateDoc.$set.zonalManager = zonalManager;
+                if (zmEmail !== undefined) updateDoc.$set.zmEmail = zmEmail;
+            }
+
+            if (Object.keys(updateDoc.$unset).length === 0) delete updateDoc.$unset;
+            if (Object.keys(updateDoc.$set).length === 0) delete updateDoc.$set;
+
+            const result = await territoryCollection.updateOne(
+                filter,
+                updateDoc,
+                options
+            );
+
+            res.send(result);
+        });
+
         /******************** Customer(s) Section ********************/
         // add a new customer(s) API
         app.post('/customers', async (req, res) => {
