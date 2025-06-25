@@ -142,11 +142,12 @@ async function run() {
         // send territory(s) data API
         app.post('/territories', async (req, res) => {
             const territory = req.body;
-            const query = { terriroryName: territory.terriroryName };
+            const query = { territory: territory.territory };
             const existingTerritory = await territoryCollection.findOne(query);
             if (existingTerritory) {
-                return res.send({ message: "Territory already exists" })
+                return res.status(409).send({ message: "Territory already exists" });
             }
+
             const result = await territoryCollection.insertOne(territory);
             res.send(result);
         });
