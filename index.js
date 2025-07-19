@@ -1257,6 +1257,8 @@ async function run() {
                     netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
+                    actualPrice: newProduct.actualPrice,
+                    tradePrice: newProduct.tradePrice,
                     date: productDate,
                 });
 
@@ -1295,6 +1297,8 @@ async function run() {
                     netWeight: newProduct.netWeight,
                     batch: newProduct.batch,
                     expire: newProduct.expire,
+                    actualPrice: newProduct.actualPrice,
+                    tradePrice: newProduct.tradePrice,
                     date: productDate,
                 });
 
