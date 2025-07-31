@@ -63,6 +63,9 @@ async function run() {
         const depotExpReqCollections = database.collection('expire_request');
         const depotExpiredCollections = database.collection('depot_expired');
 
+        /* doctor collections */
+        const doctorCollections = database.collection('doctors');
+
         /* rider collections */
         const riderCollections = database.collection('riders');
 
@@ -205,6 +208,43 @@ async function run() {
             );
 
             res.send(result);
+        });
+
+        /******************** Doctor(s) Section ********************/
+        // add a new doctor API
+        app.post('/doctors', async (req, res) => {
+            try {
+                const newDoctor = req.body;
+
+                const existingDoctor = await doctorCollections.findOne({
+                    doctorName: { $regex: `^${newDoctor.doctorName}$`, $options: 'i' }
+                });
+
+                if (!existingDoctor) {
+                    const latestDoctor = await doctorCollections.findOne(
+                        { doctorId: { $regex: '^NPLDR\\d{4}$' } },
+                        { sort: { doctorId: -1 } }
+                    );
+
+                    let serialNumber = 1;
+                    if (latestDoctor) {
+                        const latestId = latestDoctor.doctorId;
+                        const numericPart = parseInt(latestId.replace('NPLDR', ''), 10);
+                        serialNumber = numericPart + 1;
+                    }
+
+                    const formattedId = 'NPLDR' + serialNumber.toString().padStart(4, '0');
+                    newDoctor.doctorId = formattedId;
+
+                    const result = await doctorCollections.insertOne(newDoctor);
+                    res.send(result);
+                } else {
+                    res.status(400).send({ message: 'Doctor already exists.' });
+                }
+            } catch (error) {
+                console.error('Error creating doctor:', error);
+                res.status(500).send({ message: 'Failed to create doctor', error });
+            }
         });
 
         /******************** Customer(s) Section ********************/
