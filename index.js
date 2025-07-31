@@ -247,6 +247,12 @@ async function run() {
             }
         });
 
+        // get all doctor(s) API
+        app.get('/doctors', async (req, res) => {
+            const result = await doctorCollections.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        });
+
         /******************** Customer(s) Section ********************/
         // add a new customer(s) API
         app.post('/customers', async (req, res) => {
