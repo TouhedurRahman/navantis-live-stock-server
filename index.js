@@ -253,6 +253,27 @@ async function run() {
             res.send(result);
         });
 
+        // update doctors(s) API
+        app.patch('/doctor/:id', async (req, res) => {
+            try {
+                const { id } = req.params;
+                const updatedDoctor = req.body;
+                const filter = { _id: new ObjectId(id) };
+                const options = { upsert: true };
+
+                const updatedDoc = {
+                    $set: {
+                        ...updatedDoctor
+                    }
+                };
+
+                const result = await doctorCollections.updateOne(filter, updatedDoc, options);
+                res.send(result);
+            } catch (error) {
+                res.status(500).json({ message: "Internal Server Error", error });
+            }
+        });
+
         /******************** Customer(s) Section ********************/
         // add a new customer(s) API
         app.post('/customers', async (req, res) => {
